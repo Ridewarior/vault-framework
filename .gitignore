@@ -1,0 +1,59 @@
+# Uncommitted design inputs and scratch work
+/standard-workshop-files/
+
+# Obsidian local state, including within vault templates and samples
+**/.obsidian/workspace.json
+**/.obsidian/workspaces.json
+**/.obsidian/workspace-mobile.json
+**/.obsidian/cache/
+**/.obsidian/indexedDB/
+**/.obsidian/IndexedDB/
+
+# Operating system files
+.DS_Store
+Thumbs.db
+Desktop.ini
+.Trashes
+.Spotlight-V100
+.fsevensd
+
+# Editor and temporary files
+*~
+*.swp
+*.swo
+*.tmp
+*.temp
+*.bak
+*.orig
+
+# Local environment and credential files
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Claude local state
+**/.claude/projects/
+**/.claude/todos/
+**/.claude/debug/
+**/.claude/settings.local.json
+
+# Codex local state, when stored inside the checkout
+# Shared configuration, instructions, and skills remain trackable.
+**/.codex/auth.json
+**/.codex/auth.lock
+**/.codex/history.jsonl
+**/.codex/session_index.jsonl
+**/.codex/sessions/
+**/.codex/archived_sessions/
+**/.codex/shell_snapshots/
+**/.codex/log/
+**/.codex/cache/
+**/.codex/tmp/
+**/.codex/.tmp/
+**/.codex/sqlite/
+**/.codex/*.sqlite*
+**/.codex/models_cache.json
+**/.codex/version.json
+**/.codex/.codex-global-state.json*
