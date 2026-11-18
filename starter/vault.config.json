@@ -1,0 +1,28 @@
+{
+  "indexes": {
+    "roots": [
+      "*"
+    ],
+    "exclude_paths": [
+      "inbox",
+      "vault-framework",
+      "guidelines",
+      "templates",
+      "attachments",
+      "vault-tools"
+    ],
+    "properties": [
+      "description"
+    ],
+    "display_tags": null,
+    "include_tags": [],
+    "exclude_tags": [
+      "thought-bubbles"
+    ],
+    "include_properties": {},
+    "exclude_properties": {}
+  },
+  "timestamps": {
+    "enabled": true
+  }
+}

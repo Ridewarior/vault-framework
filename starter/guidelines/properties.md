@@ -1,0 +1,15 @@
+# Properties and status
+
+The common fields are described in `vault-framework/notes.md`. This file defines additional choices for this vault.
+
+`status` is optional and can apply to any note. The starter uses these values:
+
+| Value | Meaning |
+| --- | --- |
+| `active` | The note is being worked on |
+| `done` | The planned work on the note is complete |
+| `abandoned` | The subject or idea is no longer being pursued |
+
+A finished note can still need correction later. Record a change to an approved decision instead of silently replacing it.
+
+Edit these values if the vault needs a different workflow. Document other local fields here, including which notes require them.

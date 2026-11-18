@@ -26,6 +26,11 @@ Desktop.ini
 *.bak
 *.orig
 
+# Optional Python tooling
+.venv/
+__pycache__/
+*.pyc
+
 # Local environment and credential files
 .env
 .env.*

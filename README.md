@@ -1,35 +1,28 @@
-# Vault standards
+# Vault framework
 
-My personal standard for organizing and maintaining Git-backed knowledge vaults, with shared conventions for me and the agents I use.
+A framework for my knowledge vaults and the agents that use them.
 
-I want to record useful knowledge once and make it easy to find again. That includes references, research, decisions, preferences, and the working context that would otherwise disappear between projects or agent sessions. Humans and agents should read and maintain the same notes.
+The framework covers shared structure, note metadata, and maintenance principles. Each vault defines its own subjects, tags, workflows, and agent instructions. Vaults choose their storage and sync method. This repository uses Git.
 
-I use Obsidian for editing and browsing. The core standard stays editor-agnostic, using Markdown, YAML properties, relative links, and Git. Obsidian configuration will live in vault templates and samples.
+I use Obsidian, so the starter includes optional settings for it. The Markdown files and core rules work without Obsidian.
 
-This repository is intended to be public for convenient access. Its design follows my own workflows and preferences.
+## In this draft
 
-## Current state
+| Location | Contents |
+| --- | --- |
+| [Framework](vault-framework/README.md) | Shared principles and conventions |
+| [Starter](starter/README.md) | A reserved inbox, editable local guidelines, general templates, and sample agent instructions |
+| [Examples](examples/README.md) | Personal notes and an optional work-vault setup |
+| [Manual setup](docs/manual-setup.md) | How to copy the files into a vault |
+| [Tool guide](vault-tools/README.md) | Optional indexes and Git-hook upkeep |
+| [Review notes](docs/review-notes.md) | Recent decisions and open choices |
 
-Early development, working toward an initial 0.1 version. The repository currently contains project guidance and Git configuration. The detailed specification, starter vault, templates, and automation are still to be built. Decisions can change quickly during this stage.
+The copied framework lives in `vault-framework/`. Keep it unchanged during normal use. Its optional tools live in `vault-tools/`. A vault's own rules live in `guidelines/` and its root `AGENTS.md`.
 
-## How vaults should work
+## Use it
 
-- Each vault is an independent Git repository containing a snapshot of the shared standard. Personal and work vaults have separate access and storage boundaries.
-- Top-level directories represent knowledge scopes, with flexible nesting and document types used wherever they fit.
-- Raw captures and notes tagged `thought-bubbles` live in `inbox/`. They can remain informal while their usefulness and direction develop.
-- Structured notes use tags and descriptions to support discovery. Directory indexes will list eligible notes recursively, grouped by subdirectory, with paths and configurable metadata.
-- Agents search existing notes before creating new ones, preserve useful decisions and evidence, and check original sources when establishing current software behavior.
+Download or clone this repository, then follow [manual setup](docs/manual-setup.md). Choose the templates and examples that fit the vault. A personal vault does not need the work-item rules.
 
-The notes remain authoritative for their content. Indexes provide navigation derived from those notes. Git records changes over time.
+The optional Python tool creates recursive directory indexes. A vault using Git can also enable a hook for index and date upkeep. Installer automation is [deferred](docs/future-setup-automation.md).
 
-## Planned supporting assets
-
-The standard will be accompanied by reusable note templates, a starter/sample vault, and examples. Small scripts or agent skills may support recurring work where they reduce upkeep.
-
-Automation is a design goal still to be evaluated. In particular, configurable index generation and a possible `date_updated` pre-commit hook should fit ordinary editing and committing after one-time setup. Git history is sufficient if timestamp automation cannot meet that goal. `date_created` remains optional and can be populated through note templates.
-
-## Working on this repository
-
-Read [AGENTS.md](AGENTS.md) for the current design baseline, unresolved choices, and instructions for agent sessions. Detailed specification documents will be added as the design develops.
-
-The local workshop directory contains temporary design inputs and scratch material. It is excluded from Git and is unnecessary for reading the committed project documentation.
+This is an early draft toward 0.1. Read [AGENTS.md](AGENTS.md) before agent work on the repository. The repo is public for convenient access; its choices follow my own needs.

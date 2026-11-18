@@ -1,0 +1,20 @@
+{
+  "indexes": {
+    "roots": [
+      "engineering"
+    ],
+    "properties": [
+      "description",
+      "date_created"
+    ],
+    "exclude_paths": [
+      "inbox"
+    ],
+    "exclude_tags": [
+      "thought-bubbles"
+    ]
+  },
+  "timestamps": {
+    "enabled": false
+  }
+}
