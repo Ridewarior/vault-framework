@@ -1,6 +1,7 @@
 ---
 name: setup-vault
 description: Create a personal or work vault with the vault-framework CLI and tailor its starter files to the owner's purpose and guidelines.
+disable-model-invocation: true
 ---
 
 Use the destination and intended use from the request. Ask about missing choices that affect setup, such as storage, Obsidian, or automatic indexes. A request for an index does not imply Git. Use the installed vault executable or build it from the framework checkout with Go. See `vault init --help` for flags.
