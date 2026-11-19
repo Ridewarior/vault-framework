@@ -1,6 +1,6 @@
 ---
 name: setup-vault
-description: Create a personal or work vault with the vault-framework CLI and tailor its starter files to the owner's purpose and guidelines.
+description: Create a new vault with the vault-framework CLI and tailor its starter files to the owner's purpose and guidelines.
 disable-model-invocation: true
 ---
 
