@@ -1,19 +1,33 @@
 name: Build vault release
 on:
   workflow_dispatch:
-  push:
-    tags: ['v*']
+    inputs:
+      create_draft:
+        description: Create a draft release after building the downloads
+        type: boolean
+        default: false
+
 permissions:
   contents: read
+
+concurrency:
+  group: vault-release
+
 jobs:
   test:
+    if: >-
+      github.repository == 'Ridewarior/vault-framework' &&
+      github.ref == 'refs/heads/main' &&
+      github.actor == 'Ridewarior' && github.triggering_actor == 'Ridewarior'
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@d8cbb8045d7f43706b9177cceb36c1f91a6644d5 # v7.1.0
         with:
           go-version: stable
           cache: false
@@ -22,33 +36,59 @@ jobs:
     needs: test
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@d8cbb8045d7f43706b9177cceb36c1f91a6644d5 # v7.1.0
         with:
           go-version: stable
           cache: false
       - name: Build downloads
         run: sh scripts/build-release.sh dist
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: vault-downloads
           path: dist/
+          if-no-files-found: error
   draft:
-    if: github.event_name == 'push'
+    if: inputs.create_draft && github.triggering_actor == 'Ridewarior'
     needs: build
+    environment: release
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/download-artifact@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: vault-downloads
           path: dist
       - name: Attach downloads to a draft release
         env:
           GH_TOKEN: ${{ github.token }}
-          TAG: ${{ github.ref_name }}
+        shell: bash
         run: |
-          test "$TAG" = "v$(cat framework/VERSION)"
-          gh release create "$TAG" dist/* --verify-tag --draft --title "$TAG" --generate-notes
+          version=$(cat framework/VERSION)
+          if [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?$ ]]; then
+            echo "framework/VERSION must contain a version like 0.1.0 or 0.1.0-rc.1."
+            exit 1
+          fi
+          tag="v$version"
+          existing_tag=$(git ls-remote --refs origin "refs/tags/$tag")
+          if [[ -n "$existing_tag" ]]; then
+            echo "Tag $tag already exists. Choose an unused release version."
+            exit 1
+          fi
+          release_tags=$(gh api --paginate "repos/$GITHUB_REPOSITORY/releases" --jq '.[].tag_name')
+          if grep -Fxq "$tag" <<<"$release_tags"; then
+            echo "Release $tag already exists. Check Releases for an existing draft."
+            exit 1
+          fi
+          (cd dist && sha256sum -c SHA256SUMS)
+          flags=(--draft --target "$GITHUB_SHA" --title "$tag" --generate-notes)
+          if [[ "$version" == *-* ]]; then
+            flags+=(--prerelease)
+          fi
+          gh release create "$tag" dist/* "${flags[@]}"
