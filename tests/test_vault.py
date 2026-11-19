@@ -10,11 +10,13 @@ import subprocess
 import sys
 import tempfile
 import unittest
+
+import yaml
 from urllib.parse import unquote
 
 
 SOURCE = Path(__file__).resolve().parent.parent
-SCRIPT = SOURCE / "vault-tools/vault.py"
+SCRIPT = SOURCE / "tools/vault.py"
 
 
 class VaultTests(unittest.TestCase):
@@ -105,6 +107,27 @@ class VaultTests(unittest.TestCase):
         modified = target.stat().st_mtime_ns
         self.tool("index")
         self.assertEqual(target.stat().st_mtime_ns, modified)
+        self.tool("index", "--check")
+
+    def test_reconfigured_roots_report_retired_generated_indexes(self):
+        self.note("home/note.md")
+        self.note("engineering/note.md")
+        self.tool("index")
+        retired = self.root / "home/index.md"
+        original = retired.read_bytes()
+        self.config["indexes"]["roots"] = ["engineering"]
+        self.save_config()
+        self.write("personal/index.md", "# Authored index\n")
+        for args, expected in ((("index", "--check"), 1), (("index",), 0)):
+            result = self.tool(*args, expected=expected)
+            self.assertIn("Retired index: home/index.md", result.stderr)
+            self.assertNotIn("personal/index.md", result.stderr)
+            self.assertEqual(retired.read_bytes(), original)
+        self.git("add", ".")
+        result = self.tool("pre-commit")
+        self.assertIn("Retired index: home/index.md", result.stderr)
+        self.assertEqual(retired.read_bytes(), original)
+        retired.unlink()
         self.tool("index", "--check")
 
     def test_framework_copy_is_never_indexed_or_modified(self):
@@ -259,6 +282,114 @@ class VaultTests(unittest.TestCase):
         self.assertIn("Selected description", index)
         self.assertNotIn("Other staged description", index)
 
+        self.assertEqual(self.git("diff", "--cached", "--name-only").stdout.splitlines(), ["home/two.md"])
+        self.assertEqual(self.git("diff", "--name-only").stdout, "")
+        self.git("commit", "-qm", "remaining staged work")
+        self.assertIn("Other staged description", self.git("show", "HEAD:home/index.md").stdout)
+        self.assertEqual(self.git("status", "--porcelain").stdout, "")
+
+    def test_hook_write_failure_restores_work_and_staging(self):
+        first = self.note("home/first.md")
+        last = self.note("home/last.md")
+        self.git("add", ".")
+        first.write_text(first.read_text() + "Unstaged prose\n")
+        original = first.read_bytes()
+        before = self.git("write-tree").stdout
+        last.chmod(0o444)
+        try:
+            if os.access(last, os.W_OK):
+                self.skipTest("process can write read-only files")
+            self.tool("pre-commit", expected=2)
+        finally:
+            last.chmod(0o644)
+        self.assertEqual(first.read_bytes(), original)
+        self.assertEqual(self.git("write-tree").stdout, before)
+        self.assertFalse((self.root / "home/index.md").exists())
+
+    def test_locked_index_rolls_back_new_and_existing_working_files(self):
+        note = self.note("home/n.md")
+        self.git("add", ".")
+        local = note.read_bytes() + b"Unstaged prose\n"
+        note.write_bytes(local)
+        index_tree = self.git("write-tree").stdout
+        lock = self.write(".git/index.lock", "held")
+        try:
+            self.tool("pre-commit", expected=2)
+        finally:
+            lock.unlink()
+        self.assertEqual(self.git("write-tree").stdout, index_tree)
+        self.assertEqual(note.read_bytes(), local)
+        self.assertFalse((self.root / "home/index.md").exists())
+
+    def test_timestamp_scalar_styles_preserve_surrounding_yaml(self):
+        today = dt.datetime.now(dt.timezone.utc).date().isoformat()
+        for i, field in enumerate((
+            '"date_updated": "2001-01-01" # keep',
+            "'date_updated': |- # keep\n  2001-01-01",
+            "date_updated: > # keep\n  2001-01-01",
+        )):
+            note = self.note(f"home/n{i}.md")
+            note.write_text(note.read_text().replace("date_updated: 2001-01-01", field))
+            original = note.read_text()
+            self.git("add", ".")
+            self.tool("pre-commit")
+            self.assertEqual(note.read_text(), original.replace("2001-01-01", today))
+            self.assertEqual(str(yaml.safe_load(note.read_text().split("---")[1])["date_updated"]).strip(), today)
+
+    def test_crlf_generated_index_is_recognized_active_and_retired(self):
+        self.note("home/n.md")
+        self.tool("index")
+        index = self.root / "home/index.md"
+        crlf = index.read_bytes().replace(b"\n", b"\r\n")
+        index.write_bytes(crlf)
+        self.tool("index", "--check")
+        self.config["indexes"]["roots"] = []
+        self.save_config()
+        self.assertIn("Retired index: home/index.md", self.tool("index", "--check", expected=1).stderr)
+        self.assertEqual(index.read_bytes(), crlf)
+
+    def test_unreadable_excluded_notes_do_not_block_index(self):
+        self.note("home/n.md")
+        note = self.write("home/guidelines/policy.md", "private")
+        note.chmod(0)
+        try:
+            if os.access(note, os.R_OK):
+                self.skipTest("process can read restricted files")
+            self.tool("index")
+        finally:
+            note.chmod(0o644)
+
+    def test_relative_paths_and_boolean_property_types(self):
+        self.config["indexes"].update(exclude_paths=["./work/"], include_properties={"count": 1},
+                                      exclude_properties={"flags": [True]})
+        self.save_config()
+        self.write("work/no-schema.md", "unstructured")
+        self.note("home/match.md", extra="count: 1.0\nflags: [1]\n")
+        self.note("home/skip.md", extra="count: true\n")
+        self.note("home/skip-nested.md", extra="count: 1\nflags: [true]\n")
+        self.tool("index")
+        index = (self.root / "home/index.md").read_text()
+        self.assertIn("match.md", index)
+        self.assertNotIn("skip", index)
+        self.assertFalse((self.root / "work/index.md").exists())
+
+    def test_custom_post_commit_hook_preserved_before_installing_either_hook(self):
+        post = self.write(".git/hooks/post-commit", "#!/bin/sh\n# custom post hook\n")
+        self.tool("install-hook", expected=2)
+        self.assertIn("custom post hook", post.read_text())
+        self.assertFalse((post.parent / "pre-commit").exists())
+
+    def test_ambiguous_timestamp_alias_does_not_modify_its_source(self):
+        path = self.note("home/n.md")
+        path.write_text(path.read_text().replace("date_created: 2000-01-01", "date_created: &original 2000-01-01")
+                        .replace("date_updated: 2001-01-01", 'date_updated: *original'))
+        self.git("add", ".")
+        before = self.git("write-tree").stdout
+        original = path.read_bytes()
+        self.assertIn("direct scalar", self.tool("pre-commit", expected=2).stderr)
+        self.assertEqual(self.git("write-tree").stdout, before)
+        self.assertEqual(original, path.read_bytes())
+
     def test_existing_hook_is_preserved(self):
         hook = self.write(".git/hooks/pre-commit", "#!/bin/sh\n# existing custom hook\n")
         self.tool("install-hook", expected=2)
@@ -309,10 +440,10 @@ class VaultTests(unittest.TestCase):
                 shutil.copy2(SOURCE / "starter" / name, target / name)
             shutil.copytree(SOURCE / "starter/templates", target / "templates")
             shutil.copytree(SOURCE / "starter/guidelines", target / "guidelines")
-            shutil.copytree(SOURCE / "vault-framework", target / "vault-framework")
-            self.assertEqual((target / "vault-framework/VERSION").read_bytes(), (SOURCE / "vault-framework/VERSION").read_bytes())
+            shutil.copytree(SOURCE / "framework", target / "vault-framework")
+            self.assertEqual((target / "vault-framework/VERSION").read_bytes(), (SOURCE / "framework/VERSION").read_bytes())
             for name in ("vault.py", "requirements.txt", "README.md"):
-                shutil.copy2(SOURCE / "vault-tools" / name, target / "vault-tools" / name)
+                shutil.copy2(SOURCE / "tools" / name, target / "vault-tools" / name)
             for name in (".gitignore", ".gitattributes"):
                 shutil.copy2(SOURCE / name, target / name)
             if obsidian:

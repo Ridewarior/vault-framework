@@ -2,6 +2,8 @@
 
 `vault.py` builds directory indexes and can maintain them during Git commits. Index generation works with ordinary local files and does not require Git.
 
+The maintenance tool lives in `tools/` in the framework repository. The commands below use its installed location, `vault-tools/`, from a vault root.
+
 ## Manual setup
 
 Install Python 3.10+ with virtual-environment support. In a vault containing the copied tool and requirements:
@@ -20,7 +22,9 @@ Keep the environment local to the device. On Windows, its interpreter is usually
 .venv/bin/python vault-tools/vault.py index --check
 ```
 
-`index` reads the files and writes changed indexes. `--check` reports missing or stale output without writing and exits with code 1. Invalid input exits with code 2. Use `--vault /path/to/vault` before the command when running elsewhere.
+`index` reads the files and writes changed indexes. When a directory is no longer selected, the tool reports its old generated index so you can review and remove it. It leaves the file in place. The Git hook also reports retired indexes in staged content.
+
+`--check` reports missing, stale, or retired indexes without writing and exits with code 1 if it finds any. Invalid input exits with code 2. Use `--vault /path/to/vault` before the command when running elsewhere.
 
 The generator creates an `index.md` in each selected top-level directory. It groups entries by subdirectory and always shows the note title and relative path. It takes the title from `title`, the first H1, or the filename.
 
@@ -70,13 +74,17 @@ For a vault using Git, install the hook once per checkout:
 .venv/bin/python vault-tools/vault.py install-hook
 ```
 
-This records the environment's interpreter path. Rerun it after moving the environment. Existing custom hooks or `core.hooksPath` settings are preserved and need manual integration.
+The installer sets up both `pre-commit` and `post-commit` with the environment's interpreter path. Rerun it after moving the environment or upgrading a checkout that has only the older pre-commit hook. If you manage hooks yourself, call the matching `vault.py pre-commit` and `vault.py post-commit` commands from your hooks.
 
 On a commit, the hook reads staged notes and staged configuration. It updates the generated indexes and existing `date_updated` fields on included changed notes. Dates use UTC. It preserves `date_created`, and a date-only edit does not cause another automatic update.
 
 Unstaged prose and untracked notes stay out of the commit. If a generated index has content that would be overwritten, the hook stops for you to resolve it. A working note with unfinished YAML or a separately changed timestamp is left untouched; Git may then show the timestamp difference.
 
 Timestamps currently use the same selection filters as indexes. The hook does not coordinate concurrent editor writes. Git clients can skip hooks, so behavior needs checking in each client.
+
+If the pre-commit hook cannot write a working file or update Git's index, it rolls back the working files it touched. For a commit with explicit paths, Git uses a temporary index. The post-commit hook carries the generated entries into the regular index after the commit and preserves independently staged edits.
+
+Use a direct YAML scalar for `date_updated`. Quoted keys, quoted dates, and block scalars are supported. An anchored, aliased, or inherited timestamp needs an explicit date before the hook can update it.
 
 ## Verification
 

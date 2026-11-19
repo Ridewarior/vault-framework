@@ -39,7 +39,7 @@ Review the inbox during maintenance. Turn useful material into structured notes 
 
 The copied folder includes a `VERSION` file. Keep it with the framework and leave it unchanged during normal vault work.
 
-Framework changes belong in the framework repository. Review a new version before replacing the vault's copy. Local choices remain in root or scoped guidelines.
+Framework changes belong in the framework repository. Review a new version before replacing the vault's copy. You can update the framework and optional tools with the repository's setup command. Local choices remain in root or scoped guidelines.
 
 ## Indexes and tools
 
@@ -47,4 +47,4 @@ Each indexed top-level directory has an `index.md` listing notes throughout its 
 
 Indexes copy metadata from notes for navigation. Inbox notes, the framework copy, and root or scoped guidelines are supporting files and are excluded by default.
 
-The optional Python tool generates indexes without Git. Vaults using Git can also enable a hook for staged index and date updates. Setup and configuration are described in the tool's README. The tool maintains notes and indexes; it does not create a vault or copy framework files.
+The optional Python tool generates indexes without Git. Vaults using Git can also enable a hook for staged index and date updates. See the README in `vault-tools/` for setup and configuration.

@@ -4,7 +4,7 @@ Replace this paragraph with the vault's purpose, storage location, and access ru
 
 ## Assembling the starter
 
-In the framework repository, `starter/` contains local vault files. Copy its contents to a new vault root, then copy `vault-framework/` alongside them. Copy `vault-tools/` as well if wanted. The Python tool maintains indexes and dates; it does not create these directories or copy their contents.
+The framework repository's setup command creates this layout. If you're copying by hand, put the contents of `starter/` at the vault root and copy the source `framework/` and optional `tools/` into the folders below.
 
 ## Local rules
 

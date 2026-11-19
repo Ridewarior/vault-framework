@@ -2,7 +2,7 @@
 
 This optional example adds ticket documentation to the general starter. Its rules belong to the work vault that adopts them.
 
-After [assembling a vault](../../docs/manual-setup.md), copy these additions into a fresh setup:
+After [creating a vault](../../docs/setup.md), copy these additions into a fresh setup:
 
 | Source here | Destination in the vault |
 | --- | --- |

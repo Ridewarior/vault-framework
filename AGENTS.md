@@ -10,13 +10,13 @@ This is an early draft toward 0.1. During authorized drafting, make reasonable c
 
 | Task | Read |
 | --- | --- |
-| Change shared rules | [Framework](vault-framework/README.md) and [review notes](docs/review-notes.md) |
-| Change structure or metadata | [Organization](vault-framework/organization.md) and [notes and upkeep](vault-framework/notes.md) |
+| Change shared rules | [Framework](framework/README.md) and [review notes](docs/review-notes.md) |
+| Change structure or metadata | [Organization](framework/organization.md) and [notes and upkeep](framework/notes.md) |
 | Change starter governance or notes | [Starter guidelines](starter/guidelines/README.md) and [templates](starter/templates) |
 | Change work-vault rules | [Work example](examples/work/README.md) and its [local guidelines](examples/work/guidelines/README.md) |
-| Change agent guidance | [Sample instructions](starter/AGENTS.md) and the framework's [shared principles](vault-framework/README.md) |
-| Change tooling | [Tool guide](vault-tools/README.md) and [tests](tests/test_vault.py) |
-| Change setup guidance | [Manual setup](docs/manual-setup.md) and [future ideas](docs/future-setup-automation.md) |
+| Change agent guidance | [Sample instructions](starter/AGENTS.md) and the framework's [shared principles](framework/README.md) |
+| Change index or hook behavior | [Tool guide](tools/README.md) and [tests](tests/test_vault.py) |
+| Change setup or updates | [Setup guide](docs/setup.md), [manual setup](docs/manual-setup.md), and [Go tests](setup_test.go) |
 
 ## Writing
 
@@ -24,15 +24,15 @@ Follow the owner's Unslop guidance. Use plain, complete sentences and familiar w
 
 ## Boundaries
 
-- Shared framework files are copied into `vault-framework/`. Local rules live in `guidelines/` and `AGENTS.md`. Keep framework principles separate from work-specific procedures.
+- This repo's `framework/` and `tools/` install as `vault-framework/` and `vault-tools/`. Local rules live in `guidelines/` and `AGENTS.md`. Keep framework principles separate from work-specific procedures.
 - Core files are editor-agnostic. Obsidian settings belong in `starter/.obsidian/`, not the repository root.
-- Assembly and dependency setup stay manual. Do not recreate an installer without a new request. Index generation and optional Git hooks remain active tooling.
+- Keep vault creation and updates usable with the standalone Go executable. Install optional tool dependencies only when asked. Updates replace only the shared copies.
 - Preserve unrelated edits and staged changes. Keep public examples fictional. The workshop directory is ignored scratch space and is not required to understand the project.
 - Knowledge-note metadata does not apply to the repository's documentation or supporting files.
 
 ## Verification
 
-For tooling changes, run `python3 -m unittest discover -s tests -v` with PyYAML installed. Use temporary vaults and repositories. Do not install hooks here, download dependencies, or run package managers as part of the tests.
+Run `go test ./...` for setup changes. For maintenance tooling changes, run `python3 -m unittest discover -s tests -v` with PyYAML installed. Use temporary vaults and repositories. Do not install hooks here, download dependencies, or run package managers as part of the tests.
 
 Check links and YAML/JSON after documentation changes. Assemble a temporary vault using the manual copy layout to check starter-relative links. Regenerate changed example indexes and check that a second run changes nothing.
 

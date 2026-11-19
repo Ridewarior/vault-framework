@@ -10,19 +10,19 @@ I use Obsidian, so the starter includes optional settings for it. The Markdown f
 
 | Location | Contents |
 | --- | --- |
-| [Framework](vault-framework/README.md) | Shared principles and conventions |
+| [Framework](framework/README.md) | Shared principles and conventions |
 | [Starter](starter/README.md) | A reserved inbox, editable local guidelines, general templates, and sample agent instructions |
 | [Examples](examples/README.md) | Personal notes and an optional work-vault setup |
-| [Manual setup](docs/manual-setup.md) | How to copy the files into a vault |
-| [Tool guide](vault-tools/README.md) | Optional indexes and Git-hook upkeep |
+| [Setup and updates](docs/setup.md) | Create or update a vault with the Go wizard |
+| [Tool guide](tools/README.md) | Optional indexes and Git hook |
 | [Review notes](docs/review-notes.md) | Recent decisions and open choices |
 
-The copied framework lives in `vault-framework/`. Keep it unchanged during normal use. Its optional tools live in `vault-tools/`. A vault's own rules live in `guidelines/` and its root `AGENTS.md`.
+The source folders `framework/` and `tools/` become `vault-framework/` and `vault-tools/` inside a vault. Keep framework copies unchanged during normal use. A vault's own rules live in `guidelines/` and its root `AGENTS.md`.
 
 ## Use it
 
-Download or clone this repository, then follow [manual setup](docs/manual-setup.md). Choose the templates and examples that fit the vault. A personal vault does not need the work-item rules.
+Run the setup executable with no arguments for a guided walkthrough. It includes the starter files. From a source checkout with Go 1.23 or newer, run `go run .`.
 
-The optional Python tool creates recursive directory indexes. A vault using Git can also enable a hook for index and date upkeep. Installer automation is [deferred](docs/future-setup-automation.md).
+After the first published release, use the [download and launch commands](docs/setup.md) on a fresh device. The [setup skill](skills/setup-vault/SKILL.md) helps an agent create a vault and adapt its local guidelines. See the [release guide](docs/releases.md) to build and publish downloads.
 
 This is an early draft toward 0.1. Read [AGENTS.md](AGENTS.md) before agent work on the repository. The repo is public for convenient access; its choices follow my own needs.
