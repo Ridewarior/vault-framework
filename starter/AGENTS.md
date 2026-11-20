@@ -6,19 +6,21 @@ Adapt this file to the vault. Paths below refer to the assembled vault.
 
 Read [README.md](README.md) for the vault's purpose and storage rules. Follow [local guidelines](guidelines/README.md), including its tags, properties, and organization. The shared [framework](vault-framework/README.md) explains the common structure.
 
-For a scoped task, read the applicable `guidelines/` directories from the vault root down to that scope. Each layer builds on the earlier ones. Surface conflicting instructions.
+For a subject task, follow the vault's pointer to its entry point. Check the subject's `decisions/` for standing rulings. Project rules usually live in the project repository. The entry point identifies any kept here. For how to document the work, read the applicable `guidelines/` directories from the root down to that subject. Surface conflicting instructions.
 
-Search existing filenames, text, tags, and properties before creating a note. Use directory indexes where helpful and search `inbox/` directly. Follow only the links needed for the task.
+Search existing filenames, text, tags, and properties before creating a note. For a vague question, try words describing the problem and the alternatives. Search the subject and inbox directly if indexes omit thought bubbles. Give the answer, its reasoning, and links to the relevant notes. Say when the choice is still open.
 
 ## Write and maintain
 
 Update an existing note when it already covers the subject. Use a local template when one fits. Keep decisions, assumptions, and unanswered questions clear, and check original sources before claiming current software behavior.
 
-Write useful findings back to the relevant notes. Preserve unrelated edits and useful history. Describe only checks that were actually performed.
+Before editing, follow the note's `agent_edits` permission in [Notes and upkeep](vault-framework/notes.md). Omission means `auto`. Keep what someone would have to rediscover. Trim irrelevant working detail as the task progresses. Describe only checks that were actually performed.
 
-During requested inbox maintenance, turn useful captures and thought bubbles into notes. Remove abandoned ideas when the task allows it. Follow local rules for retaining sources and reasons.
+Keep session choices with the work. Create a standing decision record when the owner designates the choice as one. If a local pattern looks worth adopting, ask whether it should govern future work.
 
-Keep `vault-framework/` unchanged. Put this vault's governance in `guidelines/` and update it when the owner changes a local rule.
+File new material directly under its subject when it fits. During requested inbox maintenance, move recurring thoughts to a subject folder even when the question stays open. Follow local rules for retaining sources and removing abandoned material.
+
+Keep `vault-framework/` unchanged. Update the local guidelines when the owner changes how this vault keeps notes.
 
 ## Access and tools
 

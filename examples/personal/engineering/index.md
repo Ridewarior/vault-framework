@@ -14,7 +14,8 @@ Generated from note metadata and vault.config.json. Edit the sources, then regen
 
 | Note | Path | description | date_created |
 | --- | --- | --- | --- |
-| [Plain-text storage](decisions/plain-text-storage.md) | decisions/plain-text-storage.md | The choice to keep notes in Markdown and the reasons for it. | 2026-11-15 |
+| [Plain-text storage](decisions/plain-text-storage.md) | decisions/plain-text-storage.md | Why engineering notes use Markdown with simple YAML properties. | 2026-11-15 |
+| [Keep engineering notes in the editor's notebook](decisions/use-editor-notebook.md) | decisions/use-editor-notebook.md | Why early engineering notes were kept in the editor's notebook. |  |
 
 ## research
 

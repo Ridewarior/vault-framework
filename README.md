@@ -1,6 +1,6 @@
 # Vault framework
 
-A framework for my knowledge vaults and the agents that use them.
+I want to be able to ask "Why did I stick with that editor?" months after the conversation, even if I forget what I called the note. My agents and I keep the reasons, observations, and open questions together so either of us can find the answer. Sometimes the notes show what I tried and the question is still open.
 
 The framework covers shared structure, note metadata, and maintenance principles. Each vault defines its own subjects, tags, workflows, and agent instructions. Vaults choose their storage and sync method. This repository uses Git.
 
@@ -17,7 +17,7 @@ I use Obsidian, so the starter includes optional settings for it. The Markdown f
 | [Tool guide](tools/README.md) | Optional indexes and Git hook |
 | [Review notes](docs/review-notes.md) | Recent decisions and open choices |
 
-The source folders `framework/` and `tools/` become `vault-framework/` and `vault-tools/` inside a vault. Keep framework copies unchanged during normal use. A vault's own rules live in `guidelines/` and its root `AGENTS.md`.
+The source folders `framework/` and `tools/` become `vault-framework/` and `vault-tools/` inside a vault. Keep framework copies unchanged during normal use. A vault's `guidelines/` describes how to keep notes. Its root `AGENTS.md` directs agents working there.
 
 ## Use it
 

@@ -2,6 +2,8 @@
 
 Replace this paragraph with the vault's purpose, storage location, and access rules.
 
+Tell readers how to find the entry points for this vault's subjects. For example, a vault might use a README in each project folder or link directly to a project's existing overview.
+
 ## Assembling the starter
 
 The framework repository's setup command creates this layout. If you're copying by hand, put the contents of `starter/` at the vault root and copy the source `framework/` and optional `tools/` into the folders below.
@@ -14,7 +16,7 @@ The editable [guidelines](guidelines/README.md) define this vault's tags, proper
 
 ## Notes and upkeep
 
-Use subject directories for knowledge and `inbox/` for captures and thought bubbles. Review the inbox, turn useful material into structured notes, and remove abandoned ideas when appropriate.
+File notes and recurring thoughts under their subject. Use `inbox/` when you want to sort a capture later. A subject's `decisions/` folder holds its standing decision records. Vault-wide records go in the root `decisions/`.
 
 Choose templates that fit the vault. The general starter includes references, research, meetings, and decisions. Work-item templates are an optional addition from the work example.
 

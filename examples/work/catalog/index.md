@@ -4,6 +4,12 @@
 
 Generated from note metadata and vault.config.json. Edit the sources, then regenerate.
 
+## .
+
+| Note | Path | description | ticket_id | tags |
+| --- | --- | --- | --- | --- |
+| [Catalog](README.md) | README.md | Where to look for catalog rules, decision records, and ticket notes. |  |  |
+
 ## work
 
 | Note | Path | description | ticket_id | tags |
@@ -15,6 +21,6 @@ Generated from note metadata and vault.config.json. Edit the sources, then regen
 | Note | Path | description | ticket_id | tags |
 | --- | --- | --- | --- | --- |
 | [Execution plan](work/42-search-feedback/execution-plan.md) | work/42-search-feedback/execution-plan.md | Tasks for ticket 42, including one cancelled task. |  | sub-doc/agent-tasks |
-| [Questions and decisions](work/42-search-feedback/questions-and-decisions.md) | work/42-search-feedback/questions-and-decisions.md | Wording and error-handling questions for ticket 42. |  | sub-doc/decisions |
+| [Questions and decisions](work/42-search-feedback/questions-and-decisions.md) | work/42-search-feedback/questions-and-decisions.md | Why an empty catalog search suggests trying another term. Error handling is still open. |  | sub-doc/decisions |
 | [Search feedback](work/42-search-feedback/work-item.md) | work/42-search-feedback/work-item.md | Clear feedback for catalog searches with no results. | 42 | work/feature |
 | [Working notes](work/42-search-feedback/working-notes.md) | work/42-search-feedback/working-notes.md | The investigation planned for ticket 42. |  | sub-doc/working-notes |

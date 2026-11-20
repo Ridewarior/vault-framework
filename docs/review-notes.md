@@ -9,11 +9,14 @@ The draft now separates the framework from rules owned by each vault.
 - The starter includes `inbox/` and editable local rules for tags, properties, and organization.
 - Work-item rules, evidence checklists, execution plans, and their templates live in the optional work example.
 - Agent procedures live in the sample `AGENTS.md`. The framework describes how agents use vaults.
-- Inbox maintenance should produce useful notes or remove abandoned ideas.
+- Captures can go straight into a subject folder. An open thought can stay there between sessions. During upkeep, agents can trim dead ends from working notes and keep old material that still explains a choice.
 - `status` can apply to any note, with suggested values `active`, `done`, and `abandoned`.
 - The repo uses `framework/` and `tools/`. The setup command copies them into vaults with the `vault-` prefix. It can update those copies separately from the starter.
 - The framework is consolidated into an overview, organization, and notes guide. Its `VERSION` file identifies the copied version.
-- Guidelines layer from the framework through root guidance to scoped guidance.
+- Guidelines layer from the framework through root guidance to scoped guidance and cover how to document each subject. The vault identifies subject entry points and where authoritative project material lives.
+- The optional `agent_edits` property expresses the owner's editing permission. The default is `auto`.
+- Standing decisions belong in the owning subject's `decisions/`. The owner designates them. The short record and fuller technical template both preserve the reason for the choice and support supersession.
+- Use `deprecated` when the owner retires an accepted decision without a replacement. The record keeps its original reasoning.
 - The maintenance tool reports generated indexes left behind when a vault changes its index roots.
 
 ## Still open

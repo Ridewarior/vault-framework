@@ -1,6 +1,6 @@
 # Properties and status
 
-The common fields are described in `vault-framework/notes.md`. This file defines additional choices for this vault.
+The [shared note fields](../vault-framework/notes.md) include `agent_edits` for editing permission and `decision_status` for standing decision records. This file defines additional choices for this vault.
 
 `status` is optional and can apply to any note. The starter uses these values:
 

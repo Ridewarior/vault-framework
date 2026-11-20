@@ -2,6 +2,8 @@
   "types": {
     "tags": "tags",
     "description": "text",
+    "agent_edits": "text",
+    "decision_status": "text",
     "date_created": "date",
     "date_updated": "date"
   }

@@ -2,6 +2,7 @@
 tags:
   - sub-doc/working-notes
 description: The investigation planned for ticket 42.
+agent_edits: always
 ---
 
 # Working notes

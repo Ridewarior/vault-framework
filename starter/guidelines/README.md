@@ -1,6 +1,6 @@
 # This vault's guidelines
 
-These rules belong to this vault. Edit them as its subjects and needs change.
+These rules describe how we document things in this vault. Edit them as its subjects and needs change.
 
 - [Tags](tags.md) lists the tags used here.
 - [Properties](properties.md) defines local fields and note status.

@@ -30,6 +30,8 @@ cp -R framework "$vault_dir/vault-framework"
 
 Edit the vault README, local guidelines, and agent instructions for its purpose. Keep `vault-framework/` unchanged. These commands assume an empty destination; review existing files before copying an update over them.
 
+If you want an agent working in another project to find this vault, put its location and purpose in that agent's user-level instructions. For example, "For the reasoning behind my personal engineering choices, search the vault at `~/Notes/Personal`. Start with its `AGENTS.md`."
+
 ## Optional additions
 
 For Obsidian settings:
