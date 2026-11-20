@@ -16,7 +16,7 @@ This is an early draft toward 0.1. During authorized drafting, make reasonable c
 | Change work-vault rules | [Work example](examples/work/README.md) and its [local guidelines](examples/work/guidelines/README.md) |
 | Change agent guidance | [Sample instructions](starter/AGENTS.md) and the framework's [shared principles](framework/README.md) |
 | Change index or hook behavior | [Tool guide](tools/README.md) and [tests](tests/test_vault.py) |
-| Change setup or updates | [Setup guide](docs/setup.md), [manual setup](docs/manual-setup.md), and [Go tests](setup_test.go) |
+| Change setup or updates | [Setup guide](docs/setup.md), [manual setup](docs/manual-setup.md), and [Go tests](installer/setup_test.go) |
 
 ## Writing
 

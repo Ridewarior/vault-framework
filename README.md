@@ -21,7 +21,7 @@ The source folders `framework/` and `tools/` become `vault-framework/` and `vaul
 
 ## Use it
 
-Run the setup executable with no arguments for a guided walkthrough. It includes the starter files. From a source checkout with Go 1.23 or newer, run `go run .`.
+Run the setup executable with no arguments for a guided walkthrough. It includes the starter files. From a source checkout with Go 1.23 or newer, run `go run ./installer`.
 
 After the first published release, use the [download and launch commands](docs/setup.md) on a fresh device. The [setup skill](skills/setup-vault/SKILL.md) helps an agent create a vault and adapt its local guidelines. See the [release guide](docs/releases.md) to build and publish downloads.
 

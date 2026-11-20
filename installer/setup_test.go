@@ -10,6 +10,8 @@ import (
 	"strings"
 	"testing"
 	"testing/fstest"
+
+	"github.com/Ridewarior/vault-framework"
 )
 
 func TestWizardAndAgentCreateSameVault(t *testing.T) {
@@ -95,7 +97,7 @@ func TestWizardRetriesNonemptyDestinationBeforeAskingOptions(t *testing.T) {
 
 func TestUpdatePreviousLayoutAndBackup(t *testing.T) {
 	root := t.TempDir()
-	if err := createVault(bundled, options{root: root}); err != nil {
+	if err := createVault(vaultframework.Bundled, options{root: root}); err != nil {
 		t.Fatal(err)
 	}
 	rules := filepath.Join(root, "guidelines", "README.md")
@@ -168,7 +170,7 @@ func TestInitKeepsExistingDirectory(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := createVault(bundled, options{root: root}); err != nil {
+	if err := createVault(vaultframework.Bundled, options{root: root}); err != nil {
 		t.Fatal(err)
 	}
 	after, err := os.Stat(root)
@@ -208,7 +210,7 @@ func TestPopulateExistingRollsBackCollision(t *testing.T) {
 func TestPreparePreservesPreexistingInvalidEnvironment(t *testing.T) {
 	root := t.TempDir()
 	o := options{root: root, tools: true}
-	if err := createVault(bundled, o); err != nil {
+	if err := createVault(vaultframework.Bundled, o); err != nil {
 		t.Fatal(err)
 	}
 	env := filepath.Join(root, ".venv")
@@ -233,7 +235,7 @@ func TestPrepareRetriesAfterFailedCreation(t *testing.T) {
 	}
 	root, bin := t.TempDir(), t.TempDir()
 	o := options{root: root, tools: true}
-	if err := createVault(bundled, o); err != nil {
+	if err := createVault(vaultframework.Bundled, o); err != nil {
 		t.Fatal(err)
 	}
 	fake := "#!/bin/sh\ncase $1 in -I) exit 0;; -m) echo partial > \"$3/pyvenv.cfg\"; exit 1;; esac\nexit 2\n"

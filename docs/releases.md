@@ -15,4 +15,4 @@ In **Settings → Environments**, create an environment named `release`. Set `Ri
 
 If the workflow fails, open the failed step in Actions. If an upload stopped partway through, inspect the draft in **Releases**. Delete the incomplete draft before rerunning the workflow for the same version.
 
-Builds cover Intel/AMD 64-bit and ARM64 machines. The binaries are unsigned. To build the same downloads locally on Linux with Go and sha256sum, run `sh scripts/build-release.sh /tmp/vault-downloads`.
+Builds cover Intel/AMD 64-bit and ARM64 machines. The binaries are unsigned. To build the same downloads locally on Linux with Go and sha256sum, run `sh installer/build-release.sh /tmp/vault-downloads` from the repository root.

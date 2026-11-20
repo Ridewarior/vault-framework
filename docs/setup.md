@@ -4,7 +4,9 @@ Run the vault executable with no arguments for a guided walkthrough. It can crea
 
 ## Launch the wizard
 
-From a checkout with Go 1.23 or newer, run `go run .`. To keep the executable, run `go build -o vault .` on Linux or macOS, or `go build -o vault.exe .` on Windows.
+From the repository root with Go 1.23 or newer, run `go run ./installer`. To keep the executable, run `go build -o vault ./installer` on Linux or macOS, or `go build -o vault.exe ./installer` on Windows.
+
+The [installer folder](../installer/) holds the command, tests, and release scripts. Go embeds files relative to their package, so the [embed declaration](../embed.go) lives at the root alongside the files it bundles.
 
 Once a release is published as latest, run this on Linux or macOS with curl:
 

@@ -44,7 +44,7 @@ jobs:
           go-version: stable
           cache: false
       - name: Build downloads
-        run: sh scripts/build-release.sh dist
+        run: sh installer/build-release.sh dist
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: vault-downloads
