@@ -40,13 +40,13 @@ For Obsidian settings:
 cp -R starter/.obsidian "$vault_dir/.obsidian"
 ```
 
-For the Python index tool and its guide:
+For the optional Python tools and their guide:
 
 ```sh
 cp -R tools "$vault_dir/vault-tools"
 ```
 
-Install Python and PyYAML as described in the tool guide. Index generation works without Git. Keep virtual environments out of the vault's sync or sharing rules where needed.
+Install Python, PyYAML, and a compatible sqlite3 CLI as described in the copied tool guide. Catalog sync works without Git. Keep the Python environment local to each device.
 
 For a vault using Git:
 

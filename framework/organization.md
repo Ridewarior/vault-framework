@@ -38,7 +38,7 @@ Link the root guidance from `AGENTS.md`. Keep scoped guidance in the scope's `gu
 
 ## Inbox
 
-`inbox/` is a temporary home for captures you want to sort later. A recurring thought can live in its subject folder as soon as you know where it belongs, even if it stays open for months. Use `thought-bubbles` to find such ideas across folders. Search their text or tags directly since the starter index excludes them.
+`inbox/` is a temporary home for captures you want to sort later. A recurring thought can live in its subject folder as soon as you know where it belongs, even if it stays open for months. Use `thought-bubbles` to find such ideas across folders. Look for them by text or tag when revisiting an open idea.
 
 Review the inbox during maintenance. Turn useful material into structured notes or tickets where appropriate. Remove abandoned ideas, keeping a short reason when it would help later. Local guidelines define who handles this work and what sources to retain.
 
@@ -48,10 +48,8 @@ The copied folder includes a `VERSION` file. Keep it with the framework and leav
 
 Framework changes belong in the framework repository. Review a new version before replacing the vault's copy. You can update the framework and optional tools with the repository's setup command. Local choices remain in root or scoped guidelines.
 
-## Indexes and tools
+## Discovery tools
 
-Each indexed top-level directory has an `index.md` listing notes throughout its subtree. Sections group entries by subdirectory and show paths, descriptions, and selected properties. The vault controls inclusion and display settings.
+Use subject entry points and authored links to browse. When a note's path is known, open the Markdown. For discovery across notes, the optional tool builds a local SQLite catalog from saved files. It includes captures and thought bubbles by default. Vaults can exclude paths.
 
-Indexes copy metadata from notes for navigation. Inbox notes, the framework copy, and root or scoped guidelines are supporting files and are excluded by default.
-
-The optional Python tool generates indexes without Git. Vaults using Git can also enable a hook for staged index and date updates. See the README in `vault-tools/` for setup and configuration.
+Each device builds its own catalog outside the vault. Markdown stays authoritative. A Git vault can use optional hooks for staged dates and post-commit catalog refreshes. See the README in `vault-tools/` for setup and queries.

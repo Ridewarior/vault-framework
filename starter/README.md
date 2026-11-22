@@ -22,6 +22,6 @@ Choose templates that fit the vault. The general starter includes references, re
 
 ## Optional tools
 
-If the Python tools were copied, `vault-tools/README.md` covers dependency setup, indexes, and the optional Git hook. Index generation works without Git. A vault's storage and sync method is its own choice.
+If the optional tools were copied, `vault-tools/README.md` covers local SQLite discovery and Git hooks. The catalog works without Git. A vault's storage and sync method is its own choice.
 
 The optional Obsidian settings use core templates, relative links, and `attachments/`. `vault-framework/VERSION` identifies the copied framework version. Review framework updates before replacing that copy.

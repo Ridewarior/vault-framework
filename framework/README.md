@@ -6,7 +6,7 @@ The current version is recorded in [VERSION](VERSION). This is an early draft. T
 
 | Guide | Covers |
 | --- | --- |
-| [Organization](organization.md) | Directories, guideline layers, framework updates, and indexes |
+| [Organization](organization.md) | Directories, guideline layers, framework updates, and discovery |
 | [Notes and upkeep](notes.md) | Properties, agent edits, standing decisions, and what to keep |
 
 ## Shared knowledge

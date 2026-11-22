@@ -83,7 +83,7 @@ func wizard(in io.Reader, out io.Writer) (options, error) {
 		if python() == nil {
 			fmt.Fprintln(out, missingPython)
 		} else {
-			o.prepare = p.yes("Install tool dependencies on this device now?")
+			o.prepare = p.yes("Install PyYAML and a compatible sqlite3 CLI on this device now?")
 		}
 	}
 	if o.action == "prepare" || (o.prepare && (o.git || o.action == "update")) {
@@ -95,6 +95,9 @@ func wizard(in io.Reader, out io.Writer) (options, error) {
 	fmt.Fprintln(out, "Planned:", o.preview())
 	if o.prepare {
 		fmt.Fprintln(out, "Then:", (options{action: "prepare", root: o.root, hook: o.hook}).preview())
+	}
+	if o.action == "prepare" {
+		fmt.Fprintln(out, "This installs PyYAML and installs sqlite3 if a compatible CLI is missing.")
 	}
 	if !p.yes("Proceed?") {
 		return options{}, p.err

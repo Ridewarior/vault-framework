@@ -37,7 +37,12 @@ func TestWizardAndAgentCreateSameVault(t *testing.T) {
 	if same, err := sameTree(first, second); err != nil || !same {
 		t.Fatal("installations differ", err)
 	}
-	for _, name := range []string{"vault-framework/VERSION", "vault-tools/vault.py", "guidelines/README.md", ".obsidian/templates.json", "inbox/.gitkeep"} {
+	for _, name := range []string{
+		"vault-framework/VERSION", "vault-framework/CATALOG_SCHEMA_VERSION",
+		"vault-tools/vault.py", "vault-tools/catalog.py", "vault-tools/vault_notes.py",
+		"vault-tools/skills/discover-vault/SKILL.md", "vault-tools/skills/discover-vault/queries.md",
+		"guidelines/README.md", ".obsidian/templates.json", "inbox/.gitkeep",
+	} {
 		if _, err := os.Stat(filepath.Join(first, name)); err != nil {
 			t.Fatal(err)
 		}

@@ -17,7 +17,7 @@ The draft now separates the framework from rules owned by each vault.
 - The optional `agent_edits` property expresses the owner's editing permission. The default is `auto`.
 - Standing decisions belong in the owning subject's `decisions/`. The owner designates them. The short record and fuller technical template both preserve the reason for the choice and support supersession.
 - Use `deprecated` when the owner retires an accepted decision without a replacement. The record keeps its original reasoning.
-- The maintenance tool reports generated indexes left behind when a vault changes its index roots.
+- SQLite discovery gives each vault one searchable catalog on each device.
 
 ## Still open
 
@@ -25,7 +25,7 @@ Source and verification fields and cross-viewer heading links remain open before
 
 Tag registries, extra status values, work-note requirements, and subject-specific organization are vault decisions. Examples provide choices without making them framework requirements.
 
-Python, PyYAML, JSON configuration, and hook behavior remain optional implementation choices. Other operating systems and Git clients still need testing.
+Python, PyYAML, JSON configuration, and hook behavior remain optional implementation choices. The SQLite cache and dependency installation still need testing on macOS and Windows. Git clients can skip the optional hooks.
 
 ## Possible updater review
 

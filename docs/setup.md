@@ -36,7 +36,11 @@ vault update "/path/to/My Vault"
 
 `init` takes a new or empty directory. All three flags are optional. Git is needed for `--git`. Copying tools works even if Python is missing. The [work example](../examples/work/README.md) has additional rules and templates. You can also [copy the starter by hand](manual-setup.md).
 
-`prepare` uses Python 3.10 or newer with venv support. It creates or reuses the vault's local `.venv/` and installs PyYAML there. Run it on each device that uses the tools. If a previous run left an invalid `.venv/`, move it aside and rerun `prepare`. For a Git vault, `--hook` installs the vault commit hooks. Stage `vault.config.json` before the first commit. Exclude virtual environments from sync.
+`prepare` uses Python 3.10 or newer with venv support. It creates or reuses the vault's local `.venv/` and installs PyYAML there. Run it on each device that uses the tools. If a previous run left an invalid `.venv/`, move it aside and rerun `prepare`. Exclude virtual environments from sync.
+
+Preparation checks that Python can build and search an FTS5 table. It also checks that a compatible sqlite3 CLI can query that same table in read-only JSON mode. It records the verified executable path in the device's vault environment so sync can report it to agents. If needed, preparation installs the CLI using an available package manager. On macOS it uses Homebrew, on Windows it uses WinGet, and on Linux it supports apt, dnf, pacman, and zypper. Linux package installs may need elevated permissions. If no supported installer is available, install the [SQLite CLI](https://sqlite.org/download.html), make it available on `PATH`, and rerun preparation.
+
+Use `--hook` if you want the Git commit hooks. Stage `vault.config.json` before the first commit. From the vault root, run `.venv/bin/python vault-tools/vault.py sync` when you first need the catalog. On Windows use `.venv\Scripts\python.exe`.
 
 `update` uses the framework bundled in the executable. Download a newer binary or rerun the launcher to update to a published version. To fetch a specific source revision, use `--ref TAG_OR_COMMIT` with init or update. Update replaces the shared folders, backs up their previous contents in `.vault-update-*/previous/`, and prints the backup path. Add `--tools` to install tools in an existing vault. After an interrupted update, check that both shared folders are complete, restore any missing copies from the backup, then remove a leftover `.vault-update-lock` once the updater has stopped.
 

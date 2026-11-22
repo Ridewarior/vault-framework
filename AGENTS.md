@@ -34,6 +34,6 @@ Follow the owner's Unslop guidance. Use plain, complete sentences and familiar w
 
 Run `go test ./...` for setup changes. For maintenance tooling changes, run `python3 -m unittest discover -s tests -v` with PyYAML installed. Use temporary vaults and repositories. Do not install hooks here, download dependencies, or run package managers as part of the tests.
 
-Check links and YAML/JSON after documentation changes. Assemble a temporary vault using the manual copy layout to check starter-relative links. Regenerate changed example indexes and check that a second run changes nothing.
+Check links and YAML/JSON after documentation changes. Assemble a temporary vault using the manual copy layout to check starter-relative links. Sync changed example vaults and check that a second run changes nothing.
 
 Report what changed, what was checked, and any remaining limits. Leave draft choices clearly identified.

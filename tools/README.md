@@ -1,6 +1,6 @@
 # Vault maintenance tool
 
-`vault.py` builds directory indexes and can maintain them during Git commits. Index generation works with ordinary local files and does not require Git.
+`vault.py sync` builds and refreshes a local SQLite catalog of Markdown notes. The optional Git hooks maintain staged dates and refresh the catalog after a commit. Catalog sync works with any local storage.
 
 The maintenance tool lives in `tools/` in the framework repository. The commands below use its installed location, `vault-tools/`, from a vault root.
 
@@ -13,81 +13,53 @@ python3 -m venv .venv
 .venv/bin/python -m pip install -r vault-tools/requirements.txt
 ```
 
-Keep the environment local to the device. On Windows, its interpreter is usually `.venv\Scripts\python.exe`. The tool uses PyYAML 6.x.
+Keep the environment local to the device. On Windows, its interpreter is usually `.venv\Scripts\python.exe`. The tool uses PyYAML 6.x. For discovery, use a Python build with SQLite FTS5 and a `sqlite3` command with FTS5 and JSON support. The setup command can prepare and check both.
 
-## Generate indexes
+## Sync and query
 
 ```sh
-.venv/bin/python vault-tools/vault.py index
-.venv/bin/python vault-tools/vault.py index --check
+.venv/bin/python vault-tools/vault.py sync
 ```
 
-`index` reads the files and writes changed indexes. When a directory is no longer selected, the tool reports its old generated index so you can review and remove it. It leaves the file in place. The Git hook also reports retired indexes in staged content.
+Run the command from the vault root or pass `--vault /path/to/vault` before `sync`. The JSON output gives the database path, the sqlite3 executable path (or null if unavailable), the schema version, counts of added, updated, and removed notes, and coverage gaps. The catalog lives in the per-user cache, under `vault-framework/catalogs/`. The cache base is `XDG_CACHE_HOME` or `~/.cache` on Linux, `~/Library/Caches` on macOS, and `LOCALAPPDATA` on Windows. Each canonical vault path has its own catalog on that device. You can delete the cache to clear it and sync to build it again.
 
-`--check` reports missing, stale, or retired indexes without writing and exits with code 1 if it finds any. Invalid input exits with code 2. Use `--vault /path/to/vault` before the command when running elsewhere.
+Use `sqlite3 -readonly -json` with the reported database path. The [discovery skill](skills/discover-vault/SKILL.md) walks through finding notes and links to the schema and sample queries.
 
-The generator creates an `index.md` in each selected top-level directory. It groups entries by subdirectory and always shows the note title and relative path. It takes the title from `title`, the first H1, or the filename.
+Sync compares saved file contents with the last catalog even if Git status is unchanged. A move adds the new path and removes the old one. It updates metadata, tags, full text, and coverage in one transaction. Unreadable paths may retain an earlier entry and appear as `scan` gaps. Invalid frontmatter leaves the note searchable by text and path, with a `metadata` gap and no tag or property data. A failed sync explains whether it could find a previous snapshot.
+
+The framework release declares the catalog schema in `vault-framework/CATALOG_SCHEMA_VERSION`. SQLite stores it in `PRAGMA user_version`. Sync rebuilds an older schema from Markdown in a transaction and refuses a newer schema. Each note keeps its parsed frontmatter as JSON. An index on property names and values supports exact lookups, including members of vault-specific lists.
 
 ## Configuration
 
-Edit `vault.config.json`, then regenerate. The starter defaults are:
+The starter uses:
 
 ```json
 {
-  "indexes": {
-    "roots": ["*"],
-    "exclude_paths": ["inbox", "vault-framework", "guidelines", "templates", "attachments", "vault-tools"],
-    "properties": ["description"],
-    "display_tags": null,
-    "include_tags": [],
-    "exclude_tags": ["thought-bubbles"],
-    "include_properties": {},
-    "exclude_properties": {}
-  },
+  "catalog": {},
   "timestamps": {"enabled": true}
 }
 ```
 
-| Setting | Meaning |
-| --- | --- |
-| `roots` | `["*"]` selects top-level directories; a list selects named roots; `[]` selects none |
-| `exclude_paths` | Exclude a vault-relative path and its descendants |
-| `properties` | Extra columns, in order |
-| `display_tags` | If `tags` is a column, `null` shows all tags, a list selects tags, and `[]` hides them |
-| `include_tags` | Match any listed tag; an empty list adds no restriction |
-| `exclude_tags` | Exclude matching notes |
-| `include_properties` | Require all listed property/value pairs to match |
-| `exclude_properties` | Exclude a note when any listed pair matches |
-| `timestamps.enabled` | Enable or disable date updates in the Git hook |
+The catalog includes saved Markdown in the vault root, subject folders, and inbox, including raw captures and thought bubbles. The included notes may omit frontmatter. It skips hidden paths, symlinks, the framework copy, and root and scoped `guidelines/`. Subject READMEs and authored `index.md` files are searchable.
 
-Tag filters include children, so `research` matches `research/backups`. Property filters use exact values; dates compare as ISO strings. Missing fields do not match. Exclusions win over inclusions.
+To customize the scope, set `catalog.exclude_paths` to a list of vault-relative files or directories. A directory exclusion also applies to descendants. The list replaces the default `["AGENTS.md", "attachments", "templates", "vault-tools"]`. Set `timestamps.enabled` to `false` to turn off staged date maintenance without disabling catalog refreshes.
 
-The framework copy and all `guidelines/` directories are excluded, including scoped guidelines. They are supporting files and do not need note metadata. Other default exclusions can be edited.
+## Optional Git hooks
 
-Included notes need valid YAML, nonempty lowercase tags, and a description. Hidden paths, symlinks, and files named `index.md` are skipped. The tool refuses to overwrite an authored index without its generated marker. It leaves unchanged output alone.
-
-## Optional Git hook
-
-For a vault using Git, install the hook once per checkout:
+For a vault using Git, install the hooks once per checkout:
 
 ```sh
 .venv/bin/python vault-tools/vault.py install-hook
 ```
 
-The installer sets up both `pre-commit` and `post-commit` with the environment's interpreter path. Rerun it after moving the environment or upgrading a checkout that has only the older pre-commit hook. If you manage hooks yourself, call the matching `vault.py pre-commit` and `vault.py post-commit` commands from your hooks.
+Rerun the installer after moving the environment or upgrading a checkout that only has a pre-commit hook. If you manage hooks yourself, call `vault.py pre-commit` and `vault.py post-commit` from the matching hooks.
 
-On a commit, the hook reads staged notes and staged configuration. It updates the generated indexes and existing `date_updated` fields on included changed notes. Dates use UTC. It preserves `date_created`, and a date-only edit does not cause another automatic update.
+Stage `vault.config.json` before the first commit. Pre-commit reads staged notes and configuration. It updates an existing `date_updated` on changed notes using UTC. A date-only edit stays as entered. The hook preserves unstaged prose, and leaves an unfinished working copy or separately edited working date alone. If it cannot write a working file or update Git's index, it rolls back the working files it touched.
 
-Unstaged prose and untracked notes stay out of the commit. If a generated index has content that would be overwritten, the hook stops for you to resolve it. A working note with unfinished YAML or a separately changed timestamp is left untouched; Git may then show the timestamp difference.
+Use a direct YAML scalar for `date_updated`. Quoted keys, quoted dates, and block scalars are supported. Give an anchored, aliased, or inherited date its own value before the hook can update it.
 
-Timestamps currently use the same selection filters as indexes. The hook does not coordinate concurrent editor writes. Git clients can skip hooks, so behavior needs checking in each client.
-
-If the pre-commit hook cannot write a working file or update Git's index, it rolls back the working files it touched. For a commit with explicit paths, Git uses a temporary index. The post-commit hook carries the generated entries into the regular index after the commit and preserves independently staged edits.
-
-Use a direct YAML scalar for `date_updated`. Quoted keys, quoted dates, and block scalars are supported. An anchored, aliased, or inherited timestamp needs an explicit date before the hook can update it.
+Post-commit reconciles date updates from an explicit-path commit with the regular Git index. It then syncs from saved working files, including unstaged changes and untracked notes. Catalog failures appear after the commit and do not reject it. If a Git client skips hooks, run sync before searching.
 
 ## Verification
 
-Native Git on Linux is tested, including initial commits, partial staging, explicit-path commits, and alternate indexes. Other systems and Git clients remain unverified.
-
-In this repository, run `python3 -m unittest discover -s tests -v`. Tests use temporary directories and repositories, without downloading packages or installing a hook here.
+In the framework repository, run `python3 -m unittest discover -s tests -v` with PyYAML installed. The tests use temporary local catalogs and Git repositories. Git clients outside native Git and the package-manager installation paths need device testing.

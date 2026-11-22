@@ -10,7 +10,7 @@ After [creating a vault](../../docs/setup.md), copy these additions into a fresh
 | `templates/` contents | The vault's `templates/` |
 | `AGENTS.md` | Root agent instructions |
 | `catalog/` | Optional fictional knowledge scope |
-| `vault.config.json` | Optional work-oriented index configuration |
+| `vault.config.json` | Optional catalog and timestamp configuration |
 
 Review files before replacing rules in an existing vault. Keep `vault-framework/` unchanged. Edit the local rules for the actual tracker, subjects, and workflow.
 

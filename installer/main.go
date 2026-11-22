@@ -182,6 +182,13 @@ func prepareTools(o options) error {
 	if err := command(o.root, interpreter, "-m", "pip", "install", "-r", req); err != nil {
 		return err
 	}
+	if _, err := os.Stat(filepath.Join(o.root, "vault-tools", "catalog.py")); err == nil {
+		if err := prepareSQLite(interpreter, env); err != nil {
+			return err
+		}
+	} else if !os.IsNotExist(err) {
+		return err
+	}
 	if o.hook {
 		return command(o.root, interpreter, filepath.Join(o.root, "vault-tools", "vault.py"), "install-hook")
 	}
