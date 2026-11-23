@@ -2,7 +2,7 @@
 
 I use these vaults to pick up a question long after I have forgotten the conversation or the name of the note. People and agents keep enough context for a later reader to find what we learned, why we made a choice, and what we left open. Each vault defines its own subjects and ways of keeping notes.
 
-The current version is recorded in [VERSION](VERSION). This is an early draft. The version file travels with each framework copy so the vault can identify what it uses.
+The current version is recorded in [VERSION](VERSION). The version file travels with each framework copy so the vault can identify what it uses.
 
 | Guide | Covers |
 | --- | --- |

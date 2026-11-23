@@ -9,7 +9,7 @@ import datetime as dt
 import io
 import json
 import os
-from pathlib import Path, PurePosixPath
+from pathlib import Path
 import re
 import shlex
 import shutil
@@ -20,8 +20,7 @@ import sys
 # Discovery can run against a read-only vault. Keep Python's cache out of it too.
 sys.dont_write_bytecode = True
 from vault_notes import (
-    FRONTMATTER, SUPPORT_PATHS, VaultError, canonical, excluded,
-    metadata, relative_path, text, yaml,
+    FRONTMATTER, VaultError, canonical, excluded, metadata, text, yaml,
 )
 
 HOOK_MARKER = "# vault-framework: local pre-commit hook"
@@ -32,35 +31,6 @@ def git(root, *args, data=None, check=True, env=None):
     if check and result.returncode:
         raise VaultError(result.stderr.decode(errors="replace").strip() or "Git command failed")
     return result
-
-
-def configuration(data):
-    try:
-        config = json.loads(data)
-    except (ValueError, UnicodeDecodeError) as exc:
-        raise VaultError(f"Invalid vault.config.json: {exc}") from exc
-    if not isinstance(config, dict) or set(config) - {"catalog", "timestamps"}:
-        raise VaultError("Configuration accepts only catalog and timestamps sections")
-    timestamps = config.get("timestamps", {})
-    discovery = config.get("catalog", {})
-    if not isinstance(discovery, dict) or set(discovery) - {"exclude_paths"}:
-        raise VaultError("Catalog accepts only exclude_paths")
-    discovery = {"exclude_paths": catalog_exclusions(discovery.get("exclude_paths", SUPPORT_PATHS))}
-    if not isinstance(timestamps, dict) or set(timestamps) - {"enabled"}:
-        raise VaultError("Timestamps accepts only enabled")
-    enabled = timestamps.get("enabled", True)
-    if not isinstance(enabled, bool):
-        raise VaultError("timestamps.enabled must be a boolean")
-    return discovery, enabled
-
-
-def catalog_exclusions(paths):
-    if not isinstance(paths, list) or not all(isinstance(p, str) and relative_path(p) for p in paths):
-        raise VaultError("catalog.exclude_paths must be a list of vault-relative paths")
-    normalized = [str(PurePosixPath(p)) for p in paths]
-    if "." in normalized or len(set(normalized)) != len(normalized):
-        raise VaultError("catalog.exclude_paths must contain distinct vault-relative paths")
-    return normalized
 
 
 def index_entries(root):
@@ -82,7 +52,7 @@ def staged_snapshot(root):
     changed_notes = {os.fsdecode(path) for path in changed if path.lower().endswith(b".md")}
     entries = index_entries(root)
     entries = {path: entry for path, entry in entries.items()
-               if entry[0] in {"100644", "100755"} and (path in changed_notes or path == "vault.config.json")}
+               if entry[0] in {"100644", "100755"} and path in changed_notes}
     request = "".join(oid + "\n" for _, oid in entries.values()).encode()
     stream = io.BytesIO(git(root, "cat-file", "--batch", data=request).stdout)
     files = {}
@@ -221,7 +191,7 @@ def sync_catalog(root):
         import catalog
     except ImportError as exc:
         raise VaultError("Catalog sync needs a Python build with sqlite3. No snapshot could be checked.") from exc
-    return catalog.sync(root, lambda data: configuration(data)[0])
+    return catalog.sync(root)
 
 
 def run_post_commit(root):
@@ -236,9 +206,8 @@ def run_post_commit(root):
 
 
 def timestamp_notes(files):
-    settings = {"exclude_paths": SUPPORT_PATHS}
     for path, data in sorted(files.items()):
-        if not path.lower().endswith(".md") or excluded(path, settings):
+        if not path.lower().endswith(".md") or excluded(path):
             continue
         try:
             meta, _ = metadata(data, path)
@@ -251,46 +220,42 @@ def run_pre_commit(root):
     pending = git_path(root, "vault-partial-commit.json")
     pending.unlink(missing_ok=True)  # Discard any handoff from an aborted commit.
     files, entries = staged_snapshot(root)
-    if "vault.config.json" not in files:
-        raise VaultError("Stage vault.config.json before using the hook")
-    _, timestamps = configuration(files["vault.config.json"])
     updates = {}
     working_updates = {}
-    if timestamps:
-        today = dt.datetime.now(dt.timezone.utc).date().isoformat()
-        for path, meta in timestamp_notes(files):
-            if "date_updated" not in meta:
-                continue
-            date = canonical(meta["date_updated"])
-            date_text = date.rstrip("\r\n") if isinstance(date, str) else date
-            if not isinstance(date_text, str) or not re.fullmatch(r"\d{4}-\d{2}-\d{2}", date_text):
-                raise VaultError(f"{path}: date_updated must be an ISO date")
+    today = dt.datetime.now(dt.timezone.utc).date().isoformat()
+    for path, meta in timestamp_notes(files):
+        if "date_updated" not in meta:
+            continue
+        date = canonical(meta["date_updated"])
+        date_text = date.rstrip("\r\n") if isinstance(date, str) else date
+        if not isinstance(date_text, str) or not re.fullmatch(r"\d{4}-\d{2}-\d{2}", date_text):
+            raise VaultError(f"{path}: date_updated must be an ISO date")
+        try:
+            dt.date.fromisoformat(date_text)
+        except ValueError as exc:
+            raise VaultError(f"{path}: invalid date_updated") from exc
+        previous = git(root, "show", "HEAD:" + path, check=False)
+        if previous.returncode == 0:
             try:
-                dt.date.fromisoformat(date_text)
-            except ValueError as exc:
-                raise VaultError(f"{path}: invalid date_updated") from exc
-            previous = git(root, "show", "HEAD:" + path, check=False)
-            if previous.returncode == 0:
-                try:
-                    old_content = timestamp_edit(previous.stdout, path)
-                except VaultError:
-                    old_content = None  # Permit a staged correction to malformed historical YAML.
-                if old_content == timestamp_edit(files[path], path):
-                    continue
-            updated = timestamp_edit(files[path], path, today)
-            if updated == files[path]:
+                old_content = timestamp_edit(previous.stdout, path)
+            except VaultError:
+                old_content = None  # Permit a staged correction to malformed historical YAML.
+            if old_content == timestamp_edit(files[path], path):
                 continue
-            updates[path] = updated
-            working_path = safe_path(root, path)
-            if working_path.exists():
-                current = working_path.read_bytes()
-                # Change only the generated field, retaining unstaged prose and other metadata.
-                try:
-                    working_meta, _ = metadata(current, path)
-                    if canonical(working_meta.get("date_updated")) == date:
-                        working_updates[path] = timestamp_edit(current, path, today)
-                except VaultError:
-                    pass  # An unfinished working copy is left untouched.
+        updated = timestamp_edit(files[path], path, today)
+        if updated == files[path]:
+            continue
+        updates[path] = updated
+        working_path = safe_path(root, path)
+        if working_path.exists():
+            current = working_path.read_bytes()
+            # Change only the generated field, retaining unstaged prose and other metadata.
+            try:
+                working_meta, _ = metadata(current, path)
+                if canonical(working_meta.get("date_updated")) == date:
+                    working_updates[path] = timestamp_edit(current, path, today)
+            except VaultError:
+                pass  # An unfinished working copy is left untouched.
     changes = {}
     for path, data in updates.items():
         oid = git(root, "hash-object", "-w", "--stdin", data=data).stdout.strip().decode()

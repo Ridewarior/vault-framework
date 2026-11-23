@@ -29,7 +29,7 @@ date_created: 2026-11-15
 ---
 ```
 
-Each vault defines its tag vocabulary and extra fields in its guidelines. Ticket identifiers and source details depend on the vault's needs.
+Each vault defines its tag vocabulary and extra fields in its guidelines. Each vault decides whether to use fields for sources, verification, or ticket identifiers.
 
 ## Agent edits
 
@@ -67,7 +67,7 @@ Each vault chooses its document types and templates. The general starter include
 
 Replace template guidance with real content and remove unused sections. Obsidian's core Templates plugin can fill `{{title}}` and `{{date}}`; agents can fill the same templates directly.
 
-Use clear, complete sentences and relative Markdown links. Keep enough context for a later reader to understand the note without the original conversation. Check links after moving files. Filename and formatting choices belong to the vault.
+Use clear, complete sentences and relative Markdown links to files. When a link needs to point to a heading, check it in the viewers the vault uses. Keep enough context for a later reader to understand the note without the original conversation. Check links after moving files. Filename and formatting choices belong to the vault.
 
 ## Standing decisions
 

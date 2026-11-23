@@ -47,6 +47,9 @@ func TestWizardAndAgentCreateSameVault(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
+	if _, err := os.Stat(filepath.Join(first, "vault.config.json")); !os.IsNotExist(err) {
+		t.Fatal("unexpected starter config", err)
+	}
 	if err := prepareTools(options{root: first}); err == nil || !strings.Contains(err.Error(), "3.10") {
 		t.Fatal("missing Python:", err)
 	}

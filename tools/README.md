@@ -29,20 +29,11 @@ Sync compares saved file contents with the last catalog even if Git status is un
 
 The framework release declares the catalog schema in `vault-framework/CATALOG_SCHEMA_VERSION`. SQLite stores it in `PRAGMA user_version`. Sync rebuilds an older schema from Markdown in a transaction and refuses a newer schema. Each note keeps its parsed frontmatter as JSON. An index on property names and values supports exact lookups, including members of vault-specific lists.
 
-## Configuration
+## Which files are searchable?
 
-The starter uses:
+The catalog includes saved Markdown in the vault root, subject folders, and inbox. Notes can omit frontmatter. Sync skips hidden paths, symlinks, and any `guidelines/` folder. At the vault root it also skips `AGENTS.md`, `attachments/`, `templates/`, `vault-tools/`, and `vault-framework/`.
 
-```json
-{
-  "catalog": {},
-  "timestamps": {"enabled": true}
-}
-```
-
-The catalog includes saved Markdown in the vault root, subject folders, and inbox, including raw captures and thought bubbles. The included notes may omit frontmatter. It skips hidden paths, symlinks, the framework copy, and root and scoped `guidelines/`. Subject READMEs and authored `index.md` files are searchable.
-
-To customize the scope, set `catalog.exclude_paths` to a list of vault-relative files or directories. A directory exclusion also applies to descendants. The list replaces the default `["AGENTS.md", "attachments", "templates", "vault-tools"]`. Set `timestamps.enabled` to `false` to turn off staged date maintenance without disabling catalog refreshes.
+Subject READMEs and hand-written `index.md` files are searchable. The catalog skips an old `index.md` whose first line is `<!-- vault-framework: generated index -->`. You can review these files and their incoming links before retiring them.
 
 ## Optional Git hooks
 
@@ -54,7 +45,9 @@ For a vault using Git, install the hooks once per checkout:
 
 Rerun the installer after moving the environment or upgrading a checkout that only has a pre-commit hook. If you manage hooks yourself, call `vault.py pre-commit` and `vault.py post-commit` from the matching hooks.
 
-Stage `vault.config.json` before the first commit. Pre-commit reads staged notes and configuration. It updates an existing `date_updated` on changed notes using UTC. A date-only edit stays as entered. The hook preserves unstaged prose, and leaves an unfinished working copy or separately edited working date alone. If it cannot write a working file or update Git's index, it rolls back the working files it touched.
+The pre-commit hook reads staged notes and updates an existing `date_updated` on changed notes using UTC. A date-only edit stays as entered. The hook preserves unstaged prose, and leaves an unfinished working copy or separately edited working date alone. If it cannot write a working file or update Git's index, it rolls back the working files it touched.
+
+To use discovery with manually maintained dates, run `sync` directly and leave the timestamp hook uninstalled. Older vaults that disabled timestamps or excluded extra folders through `vault.config.json` now use the behavior described here.
 
 Use a direct YAML scalar for `date_updated`. Quoted keys, quoted dates, and block scalars are supported. Give an anchored, aliased, or inherited date its own value before the hook can update it.
 

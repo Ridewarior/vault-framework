@@ -40,8 +40,10 @@ vault update "/path/to/My Vault"
 
 Preparation checks that Python can build and search an FTS5 table. It also checks that a compatible sqlite3 CLI can query that same table in read-only JSON mode. It records the verified executable path in the device's vault environment so sync can report it to agents. If needed, preparation installs the CLI using an available package manager. On macOS it uses Homebrew, on Windows it uses WinGet, and on Linux it supports apt, dnf, pacman, and zypper. Linux package installs may need elevated permissions. If no supported installer is available, install the [SQLite CLI](https://sqlite.org/download.html), make it available on `PATH`, and rerun preparation.
 
-Use `--hook` if you want the Git commit hooks. Stage `vault.config.json` before the first commit. From the vault root, run `.venv/bin/python vault-tools/vault.py sync` when you first need the catalog. On Windows use `.venv\Scripts\python.exe`.
+Use `--hook` if you want the Git commit hooks. From the vault root, run `.venv/bin/python vault-tools/vault.py sync` when you first need the catalog. On Windows use `.venv\Scripts\python.exe`.
 
 `update` uses the framework bundled in the executable. Download a newer binary or rerun the launcher to update to a published version. To fetch a specific source revision, use `--ref TAG_OR_COMMIT` with init or update. Update replaces the shared folders, backs up their previous contents in `.vault-update-*/previous/`, and prints the backup path. Add `--tools` to install tools in an existing vault. After an interrupted update, check that both shared folders are complete, restore any missing copies from the backup, then remove a leftover `.vault-update-lock` once the updater has stopped.
+
+Vaults created with the draft release may still have a `vault.config.json`. The new tools ignore it. Before enabling the hooks on an upgraded vault, review the [catalog scope and timestamp behavior](../tools/README.md). The catalog skips old generated indexes. Update any local instructions that send readers to them.
 
 For agent-assisted setup, give the agent the [setup skill](../skills/setup-vault/SKILL.md), a destination, and a short description of what the vault is for. The skill uses the direct commands and adapts the installed README, guidelines, and agent instructions to your brief.

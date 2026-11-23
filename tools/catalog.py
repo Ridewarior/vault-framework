@@ -15,6 +15,7 @@ import sys
 from vault_notes import VaultError, canonical, excluded, metadata, text
 
 
+INDEX_MARKER = b"<!-- vault-framework: generated index -->"
 SUPPORTED_SCHEMA_VERSION = 1
 SCHEMA = (
     """CREATE TABLE notes (
@@ -46,7 +47,6 @@ SCHEMA = (
         kind TEXT NOT NULL,
         detail TEXT NOT NULL
     )""",
-    "CREATE TABLE catalog_settings (exclude_paths TEXT NOT NULL)",
 )
 
 
@@ -121,13 +121,13 @@ def read_saved(path):
                 data = stream.read()
                 seen = signature(os.fstat(stream.fileno()))
             if signature(before) == seen == signature(path.lstat()) and path.resolve() == path:
-                return data, seen
+                return data
         except FileNotFoundError:
             continue
     raise VaultError("Path changed during the read")
 
 
-def scan_markdown(root, settings, gaps):
+def scan_markdown(root, gaps):
     pending = [root]
     while pending:
         path = pending.pop()
@@ -145,7 +145,7 @@ def scan_markdown(root, settings, gaps):
             continue
         for entry in children:
             name = Path(entry.path).relative_to(root).as_posix()
-            if excluded(name, settings):
+            if excluded(name):
                 continue
             try:
                 name.encode("utf-8")
@@ -166,8 +166,8 @@ def covered_by_gap(path, gaps):
                for parent in (PurePosixPath(path), *PurePosixPath(path).parents))
 
 
-def confirmed_removed(root, path, settings, gaps):
-    if excluded(path, settings):
+def confirmed_removed(root, path, gaps):
+    if excluded(path):
         return True
     if covered_by_gap(path, gaps):
         return False
@@ -286,11 +286,8 @@ def rebuild_schema(db, supported):
     db.execute(f"PRAGMA user_version = {supported}")
 
 
-def refresh(db, root, read_settings, rebuild, had_snapshot):
-    config = root / "vault.config.json"
-    data, seen = read_saved(config)
-    settings = read_settings(data)
-    scope = json.dumps(sorted(settings["exclude_paths"]))
+def refresh(db, root, rebuild, had_snapshot):
+    root_stat = root.stat()
     old = {path: (note_id, digest, metadata_missing)
            for path, note_id, digest, metadata_missing in
            db.execute("SELECT path, id, content_hash, metadata_json IS NULL FROM notes")}
@@ -299,11 +296,17 @@ def refresh(db, root, read_settings, rebuild, had_snapshot):
     remaining = set(old)
     counts = dict.fromkeys(("added", "updated", "removed"), 0)
 
-    for path in scan_markdown(root, settings, gaps):
+    for path in scan_markdown(root, gaps):
         remaining.discard(path)
         note_id, old_digest, metadata_missing = old.get(path, (None, None, False))
         try:
-            data, _ = read_saved(root / path)
+            data = read_saved(root / path)
+            if (PurePosixPath(path).name == "index.md"
+                    and data.startswith((INDEX_MARKER + b"\n", INDEX_MARKER + b"\r\n"))):
+                if note_id is not None:
+                    remove_note(db, path, note_id)
+                    counts["removed"] += 1
+                continue
             digest = hashlib.sha256(data).hexdigest()
             if digest == old_digest:
                 if previous_gaps.get(path, (None,))[0] == "metadata":
@@ -324,15 +327,15 @@ def refresh(db, root, read_settings, rebuild, had_snapshot):
         counts["updated" if note_id is not None else "added"] += 1
 
     for path in sorted(remaining):
-        if not confirmed_removed(root, path, settings, gaps):
+        if not confirmed_removed(root, path, gaps):
             if not covered_by_gap(path, gaps):
                 gaps[path] = ("scan", "Path appeared after its directory was scanned")
             continue
         remove_note(db, path, old[path][0])
         counts["removed"] += 1
 
-    if "." in gaps or signature(config.lstat()) != seen or config.resolve() != config:
-        raise VaultError("The vault root or configuration changed during the scan. Retry when the vault is available")
+    if "." in gaps or not os.path.samestat(root_stat, root.lstat()) or root.resolve() != root:
+        raise VaultError("The vault root changed during the scan. Retry when the vault is available")
     if rebuild and had_snapshot and any(kind == "scan" for kind, _ in gaps.values()):
         raise VaultError("Cannot rebuild the older catalog while paths are inaccessible: " +
                          ", ".join(path for path, (kind, _) in sorted(gaps.items()) if kind == "scan"))
@@ -342,9 +345,6 @@ def refresh(db, root, read_settings, rebuild, had_snapshot):
     for path, issue in gaps.items():
         if issue != previous_gaps.get(path):
             db.execute("INSERT OR REPLACE INTO coverage VALUES (?, ?, ?)", (path, *issue))
-    if db.execute("SELECT exclude_paths FROM catalog_settings").fetchone() != (scope,):
-        db.execute("DELETE FROM catalog_settings")
-        db.execute("INSERT INTO catalog_settings VALUES (?)", (scope,))
 
     return {**counts, "coverage": [
         {"path": path, "kind": kind, "detail": detail}
@@ -362,12 +362,11 @@ def reader_path(root):
     return shutil.which("sqlite3")
 
 
-def sync(root, read_settings):
+def sync(root):
     database = None
     try:
         database = database_path(root)
         supported = schema_version()
-        (root / "vault.config.json").stat()
         database.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
         with closing(sqlite3.connect(database, timeout=5)) as db:
             # SQLite may need writable access to recover an interrupted writer
@@ -385,7 +384,7 @@ def sync(root, read_settings):
                 ).fetchone() is not None
                 if rebuild:
                     rebuild_schema(db, supported)
-                result = refresh(db, root, read_settings, rebuild, had_snapshot)
+                result = refresh(db, root, rebuild, had_snapshot)
         return {"database": str(database), "sqlite3": reader_path(root), "schema": supported, **result}
     except (VaultError, OSError, sqlite3.Error, ValueError, RuntimeError) as exc:
         status = snapshot_status(database) if database else "No catalog path was resolved."

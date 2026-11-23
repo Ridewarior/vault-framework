@@ -31,7 +31,6 @@ class CatalogTests(unittest.TestCase):
                          USERPROFILE=cache, LOCALAPPDATA=cache)
         env.start()
         self.addCleanup(env.stop)
-        self.write("vault.config.json", '{"catalog": {}}')
         self.database = catalog.database_path(self.root)
 
     def write(self, path, content):
@@ -92,7 +91,7 @@ extra:
         self.assertEqual(self.query("SELECT metadata_json FROM notes WHERE path = 'root.MD'"), [("{}",)])
         self.assertIn(("engineering/index.md",), self.match("navigation"))
 
-    def test_incremental_edits_moves_deletions_and_selection(self):
+    def test_incremental_edits_moves_and_deletions(self):
         first = self.write("subject/old.md", "---\ntags: [old/tag]\ncustom: one\n---\nfirstword")
         self.write("extra/delete.md", "deleteword")
         self.assertEqual(self.sync()["added"], 2)
@@ -110,11 +109,18 @@ extra:
         result = self.sync()
         self.assertEqual((result["added"], result["updated"], result["removed"]), (2, 0, 2))
         self.assertEqual(self.match("thirdword"), [("moved/old.md",)])
-        self.write("vault.config.json", '{"catalog": {"exclude_paths": ["./moved/"]}}')
-        self.assertEqual(self.sync()["removed"], 1)
-        self.assertEqual(self.match("thirdword"), [])
-        self.write("vault.config.json", '{"catalog": {}}')
+
+    def test_draft_generated_index_is_skipped_and_authored_index_is_searchable(self):
+        index = self.write("subject/index.md", "# Authored navigation")
         self.assertEqual(self.sync()["added"], 1)
+        generated = b"<!-- vault-framework: generated index -->\r\n# Old navigation"
+        index.write_bytes(generated)
+        self.assertEqual(self.sync()["removed"], 1)
+        self.assertEqual(self.sync()["removed"], 0)
+        self.assertEqual(index.read_bytes(), generated)
+        index.write_text("# New navigation")
+        self.assertEqual(self.sync()["added"], 1)
+        self.assertEqual(self.match("navigation"), [("subject/index.md",)])
 
     def test_local_properties_keep_types_and_repeated_list_positions(self):
         self.write("local.md", "---\nrelated_tickets: [A, B, A]\nvalues: [true, 1, '1', null]\nempty: []\n---\n")
@@ -232,13 +238,9 @@ os._exit(0)
         self.assertEqual(restored["updated"], 0)
         self.assertEqual(restored["coverage"], first["coverage"])
 
-    def test_unavailable_config_reports_previous_snapshot(self):
+    def test_unavailable_vault_reports_previous_snapshot(self):
         self.write("note.md", "old searchable text")
         self.sync()
-        self.write("vault.config.json", '{"catalog": {"exclude_paths": ["../escape"]}}')
-        with self.assertRaisesRegex(Exception, "A previous snapshot is available"):
-            self.sync()
-        self.assertEqual(self.match("searchable"), [("note.md",)])
         self.root.rename(self.base / "offline")
         with self.assertRaisesRegex(Exception, "A previous snapshot is available"):
             self.sync()

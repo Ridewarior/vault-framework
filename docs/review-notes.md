@@ -1,7 +1,5 @@
 # Review notes
 
-The draft now separates the framework from rules owned by each vault.
-
 ## Changes from review
 
 - Vaults choose their own storage. Git is required only for Git-based features.
@@ -19,13 +17,13 @@ The draft now separates the framework from rules owned by each vault.
 - Use `deprecated` when the owner retires an accepted decision without a replacement. The record keeps its original reasoning.
 - SQLite discovery gives each vault one searchable catalog on each device.
 
-## Still open
+## Local choices
 
-Source and verification fields and cross-viewer heading links remain open before 0.1.
+Each vault chooses its source and verification fields alongside its tags, extra status values, and work-note requirements. Relative links to files are the portable default. Check any heading links in the viewers the vault uses.
 
-Tag registries, extra status values, work-note requirements, and subject-specific organization are vault decisions. Examples provide choices without making them framework requirements.
+## Testing before 0.1
 
-Python, PyYAML, JSON configuration, and hook behavior remain optional implementation choices. The SQLite cache and dependency installation still need testing on macOS and Windows. Git clients can skip the optional hooks.
+Try SQLite preparation, sync, and a read-only query on macOS and Windows. Rehearse the note transfer in a separate copy of an existing vault. Compare the source and destination note lists, check links and attachments, and try a question whose answer is known. After an edit and a move, check that search finds the new text and path. A final sync should report no further changes.
 
 ## Possible updater review
 

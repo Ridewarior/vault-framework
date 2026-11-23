@@ -36,8 +36,6 @@ class VaultTests(unittest.TestCase):
         self.git("config", "user.name", "Vault test")
         self.git("config", "user.email", "vault-test@example.invalid")
         self.git("config", "commit.gpgsign", "false")
-        self.config = {"catalog": {}, "timestamps": {"enabled": True}}
-        self.save_config()
         for module in SCRIPT.parent.glob("*.py"):
             self.write(f"vault-tools/{module.name}", module.read_text())
         self.write("vault-framework/CATALOG_SCHEMA_VERSION", (SOURCE / "framework/CATALOG_SCHEMA_VERSION").read_text())
@@ -58,9 +56,6 @@ class VaultTests(unittest.TestCase):
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text(content)
         return target
-
-    def save_config(self):
-        self.write("vault.config.json", json.dumps(self.config))
 
     def note(self, path, *, tags=None, description="Staged description", extra="", body="Original body"):
         content = "---\ntags: " + json.dumps(tags or ["resource"]) + "\n"
@@ -212,33 +207,25 @@ class VaultTests(unittest.TestCase):
         self.tool("install-hook", expected=2)
         self.assertIn("existing custom hook", hook.read_text())
 
-    def test_staged_config_wins_over_unstaged_config_edits(self):
+    def test_draft_config_is_ignored_on_commit_and_sync(self):
+        legacy = '{"indexes": {"roots": ["*"]}, "timestamps": {"enabled": true}}'
+        config = self.write("vault.config.json", legacy)
         self.note("home/note.md")
-        self.git("add", ".")
-        self.config["timestamps"]["enabled"] = False
-        self.save_config()
         self.tool("install-hook")
-        self.git("commit", "-qm", "staged config")
-        committed = self.git("show", "HEAD:home/note.md").stdout
-        self.assertIn(f"date_updated: {dt.datetime.now(dt.timezone.utc).date()}", committed)
-        self.assertFalse(json.loads((self.root / "vault.config.json").read_text())["timestamps"]["enabled"])
+        self.commit()
+        result = json.loads(self.tool("sync").stdout)
+        self.assertEqual((result["added"], result["coverage"]), (0, []))
+        with sqlite3.connect(result["database"]) as db:
+            self.assertEqual(db.execute("SELECT path FROM notes").fetchall(), [("home/note.md",)])
+        self.assertEqual(config.read_text(), legacy)
 
-    def test_timestamp_opt_in_and_disabled_setting(self):
-        for enabled in (True, False):
-            with self.subTest(enabled=enabled):
-                self.config["timestamps"]["enabled"] = enabled
-                self.save_config()
-                note = self.note("home/note.md")
-                if enabled:
-                    note.write_text(note.read_text().replace("date_updated: 2001-01-01\n", ""))
-                self.git("add", ".")
-                self.tool("pre-commit")
-                staged = self.git("show", ":home/note.md").stdout
-                self.assertIn("date_created: 2000-01-01", staged)
-                if enabled:
-                    self.assertNotIn("date_updated", staged)
-                else:
-                    self.assertIn("date_updated: 2001-01-01", staged)
+    def test_timestamp_hook_leaves_undated_notes_alone(self):
+        note = self.note("home/note.md")
+        note.write_text(note.read_text().replace("date_updated: 2001-01-01\n", ""))
+        self.git("add", ".")
+        self.tool("pre-commit")
+        self.assertEqual(self.git("show", ":home/note.md").stdout, note.read_text())
+        self.assertNotIn("date_updated", note.read_text())
 
     def test_timestamp_hook_refuses_symlinked_working_notes(self):
         note = self.note("home/note.md")
@@ -256,7 +243,7 @@ class VaultTests(unittest.TestCase):
             target = Path(self.temp.name) / ("with-editor" if obsidian else "plain")
             (target / "vault-tools").mkdir(parents=True)
             shutil.copytree(SOURCE / "starter/inbox", target / "inbox")
-            for name in ("AGENTS.md", "README.md", "vault.config.json"):
+            for name in ("AGENTS.md", "README.md"):
                 shutil.copy2(SOURCE / "starter" / name, target / name)
             shutil.copytree(SOURCE / "starter/templates", target / "templates")
             shutil.copytree(SOURCE / "starter/guidelines", target / "guidelines")
@@ -312,11 +299,11 @@ class VaultTests(unittest.TestCase):
         self.tool("install-hook")
         self.note("home/note.md")
         self.git("add", ".")
-        self.write("vault.config.json", "{ unfinished")
-        result = self.git("commit", "-qm", "Valid staged config")
+        self.write("vault-framework/CATALOG_SCHEMA_VERSION", "invalid")
+        result = self.git("commit", "-qm", "Commit with unavailable catalog")
         self.assertIn("Catalog sync failed", result.stderr)
         self.assertIn("No previous snapshot", result.stderr)
-        self.assertIn("Valid staged config", self.git("log", "-1", "--format=%s").stdout)
+        self.assertIn("Commit with unavailable catalog", self.git("log", "-1", "--format=%s").stdout)
 
 
 if __name__ == "__main__":

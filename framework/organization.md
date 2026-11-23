@@ -50,6 +50,6 @@ Framework changes belong in the framework repository. Review a new version befor
 
 ## Discovery tools
 
-Use subject entry points and authored links to browse. When a note's path is known, open the Markdown. For discovery across notes, the optional tool builds a local SQLite catalog from saved files. It includes captures and thought bubbles by default. Vaults can exclude paths.
+Use subject entry points and authored links to browse. When a note's path is known, open the Markdown. For discovery across notes, the optional tool builds a local SQLite catalog from saved files. It includes captures and thought bubbles.
 
 Each device builds its own catalog outside the vault. Markdown stays authoritative. A Git vault can use optional hooks for staged dates and post-commit catalog refreshes. See the README in `vault-tools/` for setup and queries.

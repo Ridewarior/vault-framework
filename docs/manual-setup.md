@@ -10,7 +10,7 @@ Use a new, empty directory. From the downloaded repository, copy:
 
 | Source | Destination |
 | --- | --- |
-| `starter/AGENTS.md`, `starter/README.md`, `starter/vault.config.json` | Vault root |
+| `starter/AGENTS.md` and `starter/README.md` | Vault root |
 | `starter/inbox/` | `inbox/` |
 | `starter/guidelines/` | `guidelines/`, the vault's editable rules |
 | `starter/templates/` | `templates/` |
@@ -21,7 +21,7 @@ For example, from a Unix-like shell:
 ```sh
 vault_dir=/path/to/new-vault
 mkdir -p "$vault_dir"
-cp starter/AGENTS.md starter/README.md starter/vault.config.json "$vault_dir/"
+cp starter/AGENTS.md starter/README.md "$vault_dir/"
 cp -R starter/inbox "$vault_dir/inbox"
 cp -R starter/guidelines "$vault_dir/guidelines"
 cp -R starter/templates "$vault_dir/templates"

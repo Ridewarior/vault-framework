@@ -17,7 +17,8 @@ jobs:
   test:
     if: >-
       github.repository == 'Ridewarior/vault-framework' &&
-      github.ref == 'refs/heads/main' &&
+      github.ref_type == 'branch' &&
+      (github.ref == 'refs/heads/main' || !inputs.create_draft) &&
       github.actor == 'Ridewarior' && github.triggering_actor == 'Ridewarior'
     strategy:
       matrix:
@@ -51,7 +52,7 @@ jobs:
           path: dist/
           if-no-files-found: error
   draft:
-    if: inputs.create_draft && github.triggering_actor == 'Ridewarior'
+    if: inputs.create_draft && github.ref == 'refs/heads/main' && github.triggering_actor == 'Ridewarior'
     needs: build
     environment: release
     runs-on: ubuntu-latest

@@ -1,12 +1,12 @@
 # Finding vault notes with SQLite
 
-New vaults use one searchable catalog for discovery. Each device that enables search builds its own SQLite database outside the synced vault. Markdown stays authoritative. The catalog includes inbox captures and thought bubbles by default. Vaults can define their own exclusions. Readers can still browse subject folders and authored READMEs. [Framework](../framework/README.md) · [Catalog setup and settings](../tools/README.md)
+New vaults use one searchable catalog for discovery. Each device that enables search builds its own SQLite database outside the synced vault. Markdown stays authoritative. The catalog includes inbox captures and thought bubbles. Readers can still browse subject folders and authored READMEs. [Framework](../framework/README.md) · [Catalog setup and scope](../tools/README.md)
 
 ## Keep search current
 
 When the owner enables local catalog tools, the wizard prepares SQLite on that device. Reuse a suitable sqlite3 executable or install one. Verify that the sync tool can build a temporary FTS5 table and that the CLI can query it. [Current device setup](setup.md) · [SQLite CLI](https://sqlite.org/cli.html) · [SQLite FTS5](https://sqlite.org/fts5.html)
 
-The optional maintenance tool provides `vault.py sync`. It compares eligible Markdown paths, content hashes and selection settings with the last successful index. It creates a missing catalog, updates affected entries and leaves a current catalog alone. It reports the database path, counts of added, updated and removed notes, and paths with incomplete coverage.
+The optional maintenance tool provides `vault.py sync`. It compares eligible Markdown paths and content hashes with the last successful index. It creates a missing catalog, updates affected entries and leaves a current catalog alone. It reports the database path, counts of added, updated and removed notes, and paths with incomplete coverage.
 
 Each framework release declares its catalog schema version, starting at 1. Sync records it in SQLite's `PRAGMA user_version`. A documentation change can keep the same number. When the schema changes, the release includes matching query examples. Sync rebuilds an older catalog from Markdown and asks for a tool update if it encounters a newer schema. Adding a vault-specific property requires only a normal sync. [SQLite user version](https://sqlite.org/pragma.html#pragma_user_version)
 
@@ -18,7 +18,7 @@ Treat a move as an added path and a removed path, including the notes under a mo
 
 ## Search during edits
 
-Index saved note text with FTS5. A capture without frontmatter can appear by filename or body. If a note changes during a read, retry it or report the pending path. If the saved text has unfinished YAML, index the readable text and flag the path. Drop its previous metadata from filters until parsing succeeds. Other notes remain searchable. If the text itself cannot be read, flag that gap too. [Current frontmatter parser](../tools/vault.py) · [SQLite FTS5](https://www.sqlite.org/fts5.html)
+Index saved note text with FTS5. A capture without frontmatter can appear by filename or body. If a note changes during a read, retry it or report the pending path. If the saved text has unfinished YAML, index the readable text and flag the path. Drop its previous metadata from filters until parsing succeeds. Other notes remain searchable. If the text itself cannot be read, flag that gap too. [Current frontmatter parser](../tools/vault_notes.py) · [SQLite FTS5](https://www.sqlite.org/fts5.html)
 
 Store each declared YAML tag whole. A filter for `work` matches `work` and descendants beginning with `work/`, including `work/feature`. It skips `workshop`. A filter for `feature` alone only finds a note that declares that tag or a descendant of it. This preserves what the author entered and follows the existing filter rule. [Framework tag rules](../framework/notes.md) · [Obsidian nested tags](https://obsidian.md/help/tags)
 

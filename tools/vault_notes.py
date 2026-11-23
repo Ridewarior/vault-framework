@@ -11,7 +11,7 @@ except ImportError:
     raise SystemExit(f'Install the optional dependency: python -m pip install -r "{requirements}"')
 
 FRONTMATTER = re.compile(r"\A\ufeff?---[ \t]*\r?\n(.*?)^---[ \t]*(?:\r?\n|\Z)", re.M | re.S)
-SUPPORT_PATHS = ["AGENTS.md", "attachments", "templates", "vault-tools"]
+SUPPORT_PATHS = {"AGENTS.md", "attachments", "templates", "vault-framework", "vault-tools"}
 
 
 class VaultError(Exception):
@@ -64,22 +64,10 @@ def metadata(data, path):
     return value, source[match.end():]
 
 
-def relative_path(value):
-    path = PurePosixPath(value)
-    return bool(value) and not path.is_absolute() and ".." not in path.parts and "\\" not in value
-
-
-def excluded(path, config):
+def excluded(path):
     parts = PurePosixPath(path).parts
-    return (
-        path == "vault-framework" or path.startswith("vault-framework/")
-        or "guidelines" in parts
-        or any(part.startswith(".") for part in parts)
-        or any(
-            path == prefix.rstrip("/") or path.startswith(prefix.rstrip("/") + "/")
-            for prefix in config["exclude_paths"]
-        )
-    )
+    return (parts[0] in SUPPORT_PATHS or "guidelines" in parts
+            or any(part.startswith(".") for part in parts))
 
 
 def canonical(value):

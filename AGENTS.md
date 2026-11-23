@@ -4,7 +4,7 @@
 
 This repository develops the owner's personal vault framework. Each vault owns most of its governance. The framework sets the shared structure and principles. Vaults choose their own storage; only this repository is known to use Git.
 
-This is an early draft toward 0.1. During authorized drafting, make reasonable choices and mark unresolved requirements for review. Expect revisions as the owner reads the files.
+Record open framework decisions in the review notes for the owner.
 
 ## Where to work
 
@@ -15,7 +15,7 @@ This is an early draft toward 0.1. During authorized drafting, make reasonable c
 | Change starter governance or notes | [Starter guidelines](starter/guidelines/README.md) and [templates](starter/templates) |
 | Change work-vault rules | [Work example](examples/work/README.md) and its [local guidelines](examples/work/guidelines/README.md) |
 | Change agent guidance | [Sample instructions](starter/AGENTS.md) and the framework's [shared principles](framework/README.md) |
-| Change index or hook behavior | [Tool guide](tools/README.md) and [tests](tests/test_vault.py) |
+| Change catalog or hook behavior | [Tool guide](tools/README.md) and [tests](tests/test_vault.py) |
 | Change setup or updates | [Setup guide](docs/setup.md), [manual setup](docs/manual-setup.md), and [Go tests](installer/setup_test.go) |
 
 ## Writing

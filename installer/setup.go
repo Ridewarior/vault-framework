@@ -114,9 +114,15 @@ func createVault(src fs.FS, o options) error {
 			return err
 		}
 	}
-	files := []string{"starter/AGENTS.md", "starter/README.md", "starter/vault.config.json"}
+	files := []string{"starter/AGENTS.md", "starter/README.md"}
 	if o.git {
 		files = append(files, ".gitignore", ".gitattributes")
+	}
+	// Earlier source revisions shipped a local config alongside their starter.
+	if _, err := fs.Stat(src, "starter/vault.config.json"); err == nil {
+		files = append(files, "starter/vault.config.json")
+	} else if !errors.Is(err, fs.ErrNotExist) {
+		return err
 	}
 	for _, name := range files {
 		data, err := fs.ReadFile(src, name)
