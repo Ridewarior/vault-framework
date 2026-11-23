@@ -40,10 +40,12 @@ For Obsidian settings:
 cp -R starter/.obsidian "$vault_dir/.obsidian"
 ```
 
-For the optional Python tools and their guide:
+For the optional Python tools, their guide, and the discovery skill:
 
 ```sh
 cp -R tools "$vault_dir/vault-tools"
+mkdir -p "$vault_dir/vault-tools/skills"
+cp -R skills/discover-vault "$vault_dir/vault-tools/skills/"
 ```
 
 Install Python, PyYAML, and a compatible sqlite3 CLI as described in the copied tool guide. Catalog sync works without Git. Keep the Python environment local to each device.

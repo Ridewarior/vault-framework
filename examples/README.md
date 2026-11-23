@@ -15,4 +15,4 @@ python tools/vault.py --vault examples/personal sync
 python tools/vault.py --vault examples/work sync
 ```
 
-The personal catalog includes the inbox captures and thought bubbles. In the work catalog, try looking up ticket 42 by ID and following its links to the undated discussion. The [query reference](../tools/skills/discover-vault/queries.md) has examples for ticket IDs, nested tags, and full text.
+The personal catalog includes the inbox captures and thought bubbles. In the work catalog, try looking up ticket 42 by ID and following its links to the undated discussion. The [query reference](../skills/discover-vault/queries.md) has examples for ticket IDs, nested tags, and full text.

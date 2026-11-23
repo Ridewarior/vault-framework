@@ -44,7 +44,21 @@ func installShared(src fs.FS, stage, name string) error {
 			return fmt.Errorf("invalid %s/%s", dir, file)
 		}
 	}
-	return copyDir(src, dir, filepath.Join(stage, name))
+	dest := filepath.Join(stage, name)
+	if err := copyDir(src, dir, dest); err != nil {
+		return err
+	}
+	if name != "vault-tools" {
+		return nil
+	}
+	// Older revisions included the skill in the tools directory, if present.
+	skill := "skills/discover-vault"
+	if _, err := fs.Stat(src, skill); errors.Is(err, fs.ErrNotExist) {
+		return nil
+	} else if err != nil {
+		return err
+	}
+	return copyDir(src, skill, filepath.Join(dest, filepath.FromSlash(skill)))
 }
 
 // checkDestination returns true if the destination is an existing empty directory.

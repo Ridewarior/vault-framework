@@ -264,6 +264,7 @@ class VaultTests(unittest.TestCase):
             self.assertEqual((target / "vault-framework/VERSION").read_bytes(), (SOURCE / "framework/VERSION").read_bytes())
             shutil.copytree(SOURCE / "tools", target / "vault-tools", dirs_exist_ok=True,
                             ignore=shutil.ignore_patterns("__pycache__"))
+            shutil.copytree(SOURCE / "skills/discover-vault", target / "vault-tools/skills/discover-vault")
             for name in (".gitignore", ".gitattributes"):
                 shutil.copy2(SOURCE / name, target / name)
             if obsidian:

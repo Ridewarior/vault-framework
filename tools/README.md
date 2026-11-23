@@ -23,7 +23,7 @@ Keep the environment local to the device. On Windows, its interpreter is usually
 
 Run the command from the vault root or pass `--vault /path/to/vault` before `sync`. The JSON output gives the database path, the sqlite3 executable path (or null if unavailable), the schema version, counts of added, updated, and removed notes, and coverage gaps. The catalog lives in the per-user cache, under `vault-framework/catalogs/`. The cache base is `XDG_CACHE_HOME` or `~/.cache` on Linux, `~/Library/Caches` on macOS, and `LOCALAPPDATA` on Windows. Each canonical vault path has its own catalog on that device. You can delete the cache to clear it and sync to build it again.
 
-Use `sqlite3 -readonly -json` with the reported database path. The [discovery skill](skills/discover-vault/SKILL.md) walks through finding notes and links to the schema and sample queries.
+Use `sqlite3 -readonly -json` with the reported database path. The discovery skill walks through finding notes and links to the schema and sample queries. In a vault, read `vault-tools/skills/discover-vault/SKILL.md`. In the framework checkout, read `skills/discover-vault/SKILL.md` from the repository root.
 
 Sync compares saved file contents with the last catalog even if Git status is unchanged. A move adds the new path and removes the old one. It updates metadata, tags, full text, and coverage in one transaction. Unreadable paths may retain an earlier entry and appear as `scan` gaps. Invalid frontmatter leaves the note searchable by text and path, with a `metadata` gap and no tag or property data. A failed sync explains whether it could find a previous snapshot.
 
