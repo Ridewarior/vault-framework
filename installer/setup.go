@@ -44,7 +44,21 @@ func installShared(src fs.FS, stage, name string) error {
 			return fmt.Errorf("invalid %s/%s", dir, file)
 		}
 	}
-	return copyDir(src, dir, filepath.Join(stage, name))
+	dest := filepath.Join(stage, name)
+	if err := copyDir(src, dir, dest); err != nil {
+		return err
+	}
+	if name != "vault-tools" {
+		return nil
+	}
+	// Older revisions included the skill in the tools directory, if present.
+	skill := "skills/discover-vault"
+	if _, err := fs.Stat(src, skill); errors.Is(err, fs.ErrNotExist) {
+		return nil
+	} else if err != nil {
+		return err
+	}
+	return copyDir(src, skill, filepath.Join(dest, filepath.FromSlash(skill)))
 }
 
 // checkDestination returns true if the destination is an existing empty directory.
@@ -100,9 +114,15 @@ func createVault(src fs.FS, o options) error {
 			return err
 		}
 	}
-	files := []string{"starter/AGENTS.md", "starter/README.md", "starter/vault.config.json"}
+	files := []string{"starter/AGENTS.md", "starter/README.md"}
 	if o.git {
 		files = append(files, ".gitignore", ".gitattributes")
+	}
+	// Earlier source revisions shipped a local config alongside their starter.
+	if _, err := fs.Stat(src, "starter/vault.config.json"); err == nil {
+		files = append(files, "starter/vault.config.json")
+	} else if !errors.Is(err, fs.ErrNotExist) {
+		return err
 	}
 	for _, name := range files {
 		data, err := fs.ReadFile(src, name)

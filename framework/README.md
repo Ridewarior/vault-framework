@@ -1,17 +1,17 @@
 # Vault framework
 
-This framework sets the shared structure for my knowledge vaults. Each vault defines its own subjects, tags, workflows, and agent instructions within that structure.
+The framework defines how to organize a vault and what to record in a note. Keep the reasons for decisions, the evidence behind them, and questions that still need an answer. You choose the subjects, tags, and working practices for your vault.
 
-The current version is recorded in [VERSION](VERSION). This is an early draft. The version file travels with each framework copy so the vault can identify what it uses.
+Each installed copy includes its [version number](VERSION).
 
 | Guide | Covers |
 | --- | --- |
-| [Organization](organization.md) | Directories, guideline layers, framework updates, and indexes |
-| [Notes and upkeep](notes.md) | Properties, tags, status, templates, writing, and maintenance |
+| [Organization](organization.md) | Directories, guideline layers, framework updates, and discovery |
+| [Notes and upkeep](notes.md) | Properties, agent edits, standing decisions, and what to keep |
 
 ## Shared knowledge
 
-Humans and agents use the same notes. Keep one main note for a subject, link related material, and update it as knowledge changes.
+Humans and agents use the same notes. Update the note that already answers a question and link related material. Agent working notes can hold the context another session would otherwise have to reconstruct.
 
 Use Markdown, simple YAML properties, and ordinary links so the files work across editors. Obsidian is a useful interface, but the framework does not depend on it.
 
@@ -27,8 +27,8 @@ What belongs in a vault depends on its purpose. Financial records may belong in 
 
 ## Agents and local guidance
 
-Agents use the vault to find prior decisions, preferences, and relevant sources. Useful findings go back into the existing notes so later sessions can use them. Indexes help with discovery, while direct search covers material such as the inbox.
+Search in the words someone might remember, such as a symptom, a rejected option, or a question. Follow links to the reasons and sources. When the notes show only what someone tried, say which choices are still open. An agent can follow a convention apparent in nearby work. You decide whether it becomes a standing rule or preference.
 
 Each vault's `AGENTS.md` and guideline layers explain how to work there. Access to a note does not grant permission to publish it or change another system.
 
-Keep the framework copy unchanged during normal vault work. Put local choices in the vault's guidelines. Optional tools can reduce upkeep, but the notes must remain usable without them.
+Keep the framework copy unchanged during normal vault work. Put local choices about keeping notes in the vault's guidelines. Optional tools can reduce upkeep, but the notes must remain usable without them.

@@ -3,7 +3,6 @@ package main
 import (
 	"archive/zip"
 	"bytes"
-	"embed"
 	"errors"
 	"flag"
 	"fmt"
@@ -17,10 +16,9 @@ import (
 	"runtime"
 	"strings"
 	"time"
-)
 
-//go:embed framework/*.md framework/VERSION starter/*.md starter/*.json starter/guidelines/*.md starter/templates/*.md starter/inbox/.gitkeep starter/.obsidian/app.json starter/.obsidian/community-plugins.json starter/.obsidian/core-plugins.json starter/.obsidian/templates.json starter/.obsidian/types.json tools/vault.py tools/requirements.txt tools/README.md .gitignore .gitattributes
-var bundled embed.FS
+	"github.com/Ridewarior/vault-framework"
+)
 
 type options struct {
 	action, root, ref                   string
@@ -71,7 +69,7 @@ func parse(args []string) (options, error) {
 
 func source(ref string) (fs.FS, error) {
 	if ref == "" {
-		return bundled, nil
+		return vaultframework.Bundled, nil
 	}
 	client := http.Client{Timeout: 60 * time.Second}
 	res, err := client.Get("https://api.github.com/repos/Ridewarior/vault-framework/zipball/" + url.PathEscape(ref))
@@ -184,6 +182,13 @@ func prepareTools(o options) error {
 	if err := command(o.root, interpreter, "-m", "pip", "install", "-r", req); err != nil {
 		return err
 	}
+	if _, err := os.Stat(filepath.Join(o.root, "vault-tools", "catalog.py")); err == nil {
+		if err := prepareSQLite(interpreter, env); err != nil {
+			return err
+		}
+	} else if !os.IsNotExist(err) {
+		return err
+	}
 	if o.hook {
 		return command(o.root, interpreter, filepath.Join(o.root, "vault-tools", "vault.py"), "install-hook")
 	}
@@ -238,7 +243,7 @@ func main() {
 			fmt.Println(usage)
 			return
 		case "--version":
-			v, _ := bundled.ReadFile("framework/VERSION")
+			v, _ := vaultframework.Bundled.ReadFile("framework/VERSION")
 			fmt.Print(string(v))
 			return
 		}

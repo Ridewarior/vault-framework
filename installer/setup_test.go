@@ -10,6 +10,8 @@ import (
 	"strings"
 	"testing"
 	"testing/fstest"
+
+	"github.com/Ridewarior/vault-framework"
 )
 
 func TestWizardAndAgentCreateSameVault(t *testing.T) {
@@ -35,10 +37,18 @@ func TestWizardAndAgentCreateSameVault(t *testing.T) {
 	if same, err := sameTree(first, second); err != nil || !same {
 		t.Fatal("installations differ", err)
 	}
-	for _, name := range []string{"vault-framework/VERSION", "vault-tools/vault.py", "guidelines/README.md", ".obsidian/templates.json", "inbox/.gitkeep"} {
+	for _, name := range []string{
+		"vault-framework/VERSION", "vault-framework/CATALOG_SCHEMA_VERSION",
+		"vault-tools/vault.py", "vault-tools/catalog.py", "vault-tools/vault_notes.py",
+		"vault-tools/skills/discover-vault/SKILL.md", "vault-tools/skills/discover-vault/queries.md",
+		"guidelines/README.md", ".obsidian/templates.json", "inbox/.gitkeep",
+	} {
 		if _, err := os.Stat(filepath.Join(first, name)); err != nil {
 			t.Fatal(err)
 		}
+	}
+	if _, err := os.Stat(filepath.Join(first, "vault.config.json")); !os.IsNotExist(err) {
+		t.Fatal("unexpected starter config", err)
 	}
 	if err := prepareTools(options{root: first}); err == nil || !strings.Contains(err.Error(), "3.10") {
 		t.Fatal("missing Python:", err)
@@ -95,7 +105,7 @@ func TestWizardRetriesNonemptyDestinationBeforeAskingOptions(t *testing.T) {
 
 func TestUpdatePreviousLayoutAndBackup(t *testing.T) {
 	root := t.TempDir()
-	if err := createVault(bundled, options{root: root}); err != nil {
+	if err := createVault(vaultframework.Bundled, options{root: root}); err != nil {
 		t.Fatal(err)
 	}
 	rules := filepath.Join(root, "guidelines", "README.md")
@@ -168,7 +178,7 @@ func TestInitKeepsExistingDirectory(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := createVault(bundled, options{root: root}); err != nil {
+	if err := createVault(vaultframework.Bundled, options{root: root}); err != nil {
 		t.Fatal(err)
 	}
 	after, err := os.Stat(root)
@@ -208,7 +218,7 @@ func TestPopulateExistingRollsBackCollision(t *testing.T) {
 func TestPreparePreservesPreexistingInvalidEnvironment(t *testing.T) {
 	root := t.TempDir()
 	o := options{root: root, tools: true}
-	if err := createVault(bundled, o); err != nil {
+	if err := createVault(vaultframework.Bundled, o); err != nil {
 		t.Fatal(err)
 	}
 	env := filepath.Join(root, ".venv")
@@ -233,7 +243,7 @@ func TestPrepareRetriesAfterFailedCreation(t *testing.T) {
 	}
 	root, bin := t.TempDir(), t.TempDir()
 	o := options{root: root, tools: true}
-	if err := createVault(bundled, o); err != nil {
+	if err := createVault(vaultframework.Bundled, o); err != nil {
 		t.Fatal(err)
 	}
 	fake := "#!/bin/sh\ncase $1 in -I) exit 0;; -m) echo partial > \"$3/pyvenv.cfg\"; exit 1;; esac\nexit 2\n"

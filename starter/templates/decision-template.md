@@ -1,7 +1,8 @@
 ---
 tags:
   - decision
-description: "Summarize this note."
+description: "Name the choice and its scope."
+decision_status: proposed
 date_created: "{{date}}"
 date_updated: "{{date}}"
 ---
@@ -10,16 +11,12 @@ date_updated: "{{date}}"
 
 ## Context
 
-What needs to be decided?
+What question should this settle, and where will the answer apply?
 
 ## Decision
 
-State the choice and whether it is proposed or agreed.
+State the proposal. Once the owner decides, set `decision_status` to `accepted` or `rejected` and explain why. Name who decided and when, if known.
 
-## Reasons and alternatives
+## Alternatives
 
-Why this choice? What other options mattered?
-
-## Effects
-
-What changes because of this decision?
+Which other option mattered, and why did you pass it over? Include any condition that would change the choice. Remove this section if there was no meaningful alternative.

@@ -6,6 +6,7 @@ import os
 from pathlib import Path
 import re
 import shutil
+import sqlite3
 import subprocess
 import sys
 import tempfile
@@ -28,14 +29,16 @@ class VaultTests(unittest.TestCase):
         self.env = dict(os.environ)
         for key in ("GIT_DIR", "GIT_WORK_TREE", "GIT_INDEX_FILE", "GIT_COMMON_DIR"):
             self.env.pop(key, None)
-        self.env.update(GIT_CONFIG_GLOBAL=os.devnull, GIT_CONFIG_NOSYSTEM="1")
+        cache = str(Path(self.temp.name) / "device")
+        self.env.update(GIT_CONFIG_GLOBAL=os.devnull, GIT_CONFIG_NOSYSTEM="1",
+                        XDG_CACHE_HOME=cache, HOME=cache, USERPROFILE=cache, LOCALAPPDATA=cache)
         self.git("init", "-q")
         self.git("config", "user.name", "Vault test")
         self.git("config", "user.email", "vault-test@example.invalid")
         self.git("config", "commit.gpgsign", "false")
-        self.config = {"indexes": {}, "timestamps": {"enabled": True}}
-        self.save_config()
-        self.write("vault-tools/vault.py", SCRIPT.read_text())
+        for module in SCRIPT.parent.glob("*.py"):
+            self.write(f"vault-tools/{module.name}", module.read_text())
+        self.write("vault-framework/CATALOG_SCHEMA_VERSION", (SOURCE / "framework/CATALOG_SCHEMA_VERSION").read_text())
 
     def run_process(self, args, *, expected=0, env=None):
         result = subprocess.run(args, cwd=self.root, env=env or self.env, capture_output=True, text=True)
@@ -54,9 +57,6 @@ class VaultTests(unittest.TestCase):
         target.write_text(content)
         return target
 
-    def save_config(self):
-        self.write("vault.config.json", json.dumps(self.config))
-
     def note(self, path, *, tags=None, description="Staged description", extra="", body="Original body"):
         content = "---\ntags: " + json.dumps(tags or ["resource"]) + "\n"
         content += "description: " + json.dumps(description) + "\n"
@@ -67,117 +67,7 @@ class VaultTests(unittest.TestCase):
         self.git("add", ".")
         self.git("commit", "-qm", message)
 
-    def test_recursive_groups_paths_and_configurable_fields(self):
-        self.config["indexes"].update(properties=["description", "ticket_id", "tags"], display_tags=["work"])
-        self.save_config()
-        self.note("engineering/root.md")
-        self.note("engineering/deep/work/ticket one.md", tags=["work/bug", "subject"], description="A | B", extra="ticket_id: ABC-42\n")
-        self.tool("index")
-        output = (self.root / "engineering/index.md").read_text()
-        self.assertIn("## .", output)
-        self.assertIn("## deep/work", output)
-        self.assertIn("deep/work/ticket%20one.md", output)
-        self.assertIn("deep/work/ticket one.md", output)
-        self.assertIn("A \\| B", output)
-        self.assertIn("ABC-42 | work/bug", output)
-        self.assertNotIn("subject", output)
-
-    def test_filters_exemptions_and_nested_scope_guidelines(self):
-        self.config["indexes"].update(include_tags=["work"], exclude_properties={"status": "done"})
-        self.save_config()
-        self.note("engineering/work/active.md", tags=["work/docs"])
-        self.note("engineering/guidelines/policy.md", tags=["work/docs"])
-        self.note("engineering/finished.md", tags=["work/bug"], extra="status: done\n")
-        self.note("engineering/other.md")
-        self.write("engineering/bubble.md", "---\ntags: [thought-bubbles]\n---\nrough")
-        self.write("inbox/raw.md", "unstructured capture")
-        self.tool("index")
-        output = (self.root / "engineering/index.md").read_text()
-        self.assertIn("work/active.md", output)
-        for omitted in ("guidelines/policy.md", "finished.md", "other.md", "bubble.md"):
-            self.assertNotIn(omitted, output)
-        self.assertFalse((self.root / "inbox/index.md").exists())
-
-    def test_check_and_regeneration_are_idempotent(self):
-        self.note("home/note.md")
-        self.tool("index", "--check", expected=1)
-        self.assertFalse((self.root / "home/index.md").exists())
-        self.tool("index")
-        target = self.root / "home/index.md"
-        modified = target.stat().st_mtime_ns
-        self.tool("index")
-        self.assertEqual(target.stat().st_mtime_ns, modified)
-        self.tool("index", "--check")
-
-    def test_reconfigured_roots_report_retired_generated_indexes(self):
-        self.note("home/note.md")
-        self.note("engineering/note.md")
-        self.tool("index")
-        retired = self.root / "home/index.md"
-        original = retired.read_bytes()
-        self.config["indexes"]["roots"] = ["engineering"]
-        self.save_config()
-        self.write("personal/index.md", "# Authored index\n")
-        for args, expected in ((("index", "--check"), 1), (("index",), 0)):
-            result = self.tool(*args, expected=expected)
-            self.assertIn("Retired index: home/index.md", result.stderr)
-            self.assertNotIn("personal/index.md", result.stderr)
-            self.assertEqual(retired.read_bytes(), original)
-        self.git("add", ".")
-        result = self.tool("pre-commit")
-        self.assertIn("Retired index: home/index.md", result.stderr)
-        self.assertEqual(retired.read_bytes(), original)
-        retired.unlink()
-        self.tool("index", "--check")
-
-    def test_framework_copy_is_never_indexed_or_modified(self):
-        self.config["indexes"]["exclude_paths"] = []
-        self.save_config()
-        framework = self.write("vault-framework/README.md", "# Framework copy\n\nLeave this unchanged.\n")
-        original = framework.read_bytes()
-        self.note("home/note.md")
-        self.tool("index")
-        self.assertEqual(framework.read_bytes(), original)
-        self.assertFalse((self.root / "vault-framework/index.md").exists())
-        self.assertTrue((self.root / "home/index.md").exists())
-
-    def test_scoped_guidelines_do_not_require_note_metadata(self):
-        self.config["indexes"]["exclude_paths"] = []
-        self.save_config()
-        self.write("engineering/guidelines/README.md", "# Scope guidance\n")
-        self.write("engineering/service/guidelines/tags.md", "# Nested scope tags\n")
-        self.note("engineering/reference.md")
-        self.tool("index")
-        output = (self.root / "engineering/index.md").read_text()
-        self.assertIn("reference.md", output)
-        self.assertNotIn("guidelines/", output)
-
-    def test_index_generation_without_git(self):
-        plain = Path(self.temp.name) / "plain-vault"
-        (plain / "home").mkdir(parents=True)
-        (plain / "vault.config.json").write_text(json.dumps(self.config))
-        (plain / "home/note.md").write_text("---\ntags: [resource]\ndescription: A note in ordinary storage\n---\n# Example\n")
-        command = [sys.executable, str(SCRIPT), "--vault", str(plain)]
-        self.run_process([*command, "index"])
-        self.run_process([*command, "index", "--check"])
-        self.assertIn("ordinary storage", (plain / "home/index.md").read_text())
-        self.assertFalse((plain / ".git").exists())
-
-    def test_bad_metadata_does_not_partially_write_outputs(self):
-        self.note("a/good.md")
-        self.write("b/bad.md", "---\ntags: [resource]\n---\n# No description\n")
-        self.tool("index", expected=2)
-        self.assertFalse((self.root / "a/index.md").exists())
-        self.write("b/bad.md", "---\ntags: [resource]\ntags: [work]\n---\n")
-        self.assertIn("unique", self.tool("index", expected=2).stderr)
-
-    def test_authored_index_is_preserved(self):
-        self.note("home/note.md")
-        target = self.write("home/index.md", "# My authored navigation\n")
-        self.tool("index", expected=2)
-        self.assertEqual(target.read_text(), "# My authored navigation\n")
-
-    def test_native_initial_commit_creates_index_and_timestamps(self):
+    def test_native_initial_commit_updates_timestamp(self):
         self.note("home/note.md")
         self.tool("install-hook")
         self.commit()
@@ -185,7 +75,6 @@ class VaultTests(unittest.TestCase):
         today = dt.datetime.now(dt.timezone.utc).date().isoformat()
         self.assertIn("date_updated: " + today, committed)
         self.assertIn("date_created: 2000-01-01", committed)
-        self.assertIn("note.md", self.git("show", "HEAD:home/index.md").stdout)
         self.assertEqual(self.git("status", "--porcelain").stdout, "")
 
     def test_partial_staging_preserves_unstaged_description_and_body(self):
@@ -203,46 +92,8 @@ class VaultTests(unittest.TestCase):
         self.assertIn("Unstaged description", note.read_text())
         self.assertIn("Unstaged prose", note.read_text())
         self.assertIn("date_created: 2000-01-01", note.read_text())
-        self.assertIn("Staged description", self.git("show", "HEAD:home/index.md").stdout)
-        self.assertNotIn("Unstaged description", self.git("show", "HEAD:home/index.md").stdout)
-
-    def test_untracked_notes_do_not_leak_into_commit_indexes(self):
-        self.note("home/tracked.md")
-        self.git("add", ".")
-        self.note("home/untracked.md")
-        self.tool("install-hook")
-        self.git("commit", "-qm", "tracked only")
-        self.assertNotIn("untracked.md", self.git("show", "HEAD:home/index.md").stdout)
-        self.assertTrue((self.root / "home/untracked.md").exists())
-
-    def test_staged_deletion_removes_index_entry(self):
-        self.note("home/keep.md")
-        self.note("home/remove.md")
-        self.tool("install-hook")
-        self.commit()
-        self.git("rm", "home/remove.md")
-        self.git("commit", "-qm", "remove")
-        output = self.git("show", "HEAD:home/index.md").stdout
-        self.assertIn("keep.md", output)
-        self.assertNotIn("remove.md", output)
-        self.assertNotIn("](index.md)", output)
-
-    def test_unstaged_index_edits_abort_before_mutating_staging(self):
-        note = self.note("home/note.md")
-        self.tool("index")
-        self.commit()
-        self.tool("install-hook")
-        note.write_text(note.read_text() + "Staged change\n")
-        self.git("add", "home/note.md")
-        index = self.root / "home/index.md"
-        index.write_text(index.read_text() + "Unstaged index notes\n")
-        # Change metadata so the hook must regenerate the index.
-        note.write_text(note.read_text().replace("Staged description", "New description"))
-        self.git("add", "home/note.md")
-        original_staged = self.git("show", ":home/note.md").stdout
-        self.git("commit", "-qm", "should fail", expected=1)
-        self.assertEqual(self.git("show", ":home/note.md").stdout, original_staged)
-        self.assertIn("Unstaged index notes", index.read_text())
+        self.assertIn("Staged description", committed)
+        self.assertIn(f"date_updated: {dt.datetime.now(dt.timezone.utc).date()}", committed)
 
     def test_timestamp_only_changes_are_not_overridden(self):
         note = self.note("home/note.md")
@@ -265,7 +116,8 @@ class VaultTests(unittest.TestCase):
         self.tool("pre-commit", env=env)
         self.assertEqual(self.git("show", ":home/note.md").stdout, normal)
         self.assertIn("Alternate staged change", self.git("show", ":home/note.md", env=env).stdout)
-        self.assertIn("home/index.md", self.git("ls-files", env=env).stdout)
+        staged = self.git("show", ":home/note.md", env=env).stdout
+        self.assertIn(f"date_updated: {dt.datetime.now(dt.timezone.utc).date()}", staged)
 
     def test_explicit_path_commit_excludes_other_staged_changes(self):
         one = self.note("home/one.md")
@@ -278,14 +130,13 @@ class VaultTests(unittest.TestCase):
         self.git("commit", "-qm", "one file", "home/one.md")
         self.assertIn("Selected description", self.git("show", "HEAD:home/one.md").stdout)
         self.assertNotIn("Other staged description", self.git("show", "HEAD:home/two.md").stdout)
-        index = self.git("show", "HEAD:home/index.md").stdout
-        self.assertIn("Selected description", index)
-        self.assertNotIn("Other staged description", index)
+        self.assertIn(f"date_updated: {dt.datetime.now(dt.timezone.utc).date()}",
+                      self.git("show", "HEAD:home/one.md").stdout)
 
         self.assertEqual(self.git("diff", "--cached", "--name-only").stdout.splitlines(), ["home/two.md"])
         self.assertEqual(self.git("diff", "--name-only").stdout, "")
         self.git("commit", "-qm", "remaining staged work")
-        self.assertIn("Other staged description", self.git("show", "HEAD:home/index.md").stdout)
+        self.assertIn("Other staged description", self.git("show", "HEAD:home/two.md").stdout)
         self.assertEqual(self.git("status", "--porcelain").stdout, "")
 
     def test_hook_write_failure_restores_work_and_staging(self):
@@ -304,9 +155,8 @@ class VaultTests(unittest.TestCase):
             last.chmod(0o644)
         self.assertEqual(first.read_bytes(), original)
         self.assertEqual(self.git("write-tree").stdout, before)
-        self.assertFalse((self.root / "home/index.md").exists())
 
-    def test_locked_index_rolls_back_new_and_existing_working_files(self):
+    def test_locked_index_rolls_back_working_timestamp(self):
         note = self.note("home/n.md")
         self.git("add", ".")
         local = note.read_bytes() + b"Unstaged prose\n"
@@ -319,7 +169,6 @@ class VaultTests(unittest.TestCase):
             lock.unlink()
         self.assertEqual(self.git("write-tree").stdout, index_tree)
         self.assertEqual(note.read_bytes(), local)
-        self.assertFalse((self.root / "home/index.md").exists())
 
     def test_timestamp_scalar_styles_preserve_surrounding_yaml(self):
         today = dt.datetime.now(dt.timezone.utc).date().isoformat()
@@ -335,43 +184,6 @@ class VaultTests(unittest.TestCase):
             self.tool("pre-commit")
             self.assertEqual(note.read_text(), original.replace("2001-01-01", today))
             self.assertEqual(str(yaml.safe_load(note.read_text().split("---")[1])["date_updated"]).strip(), today)
-
-    def test_crlf_generated_index_is_recognized_active_and_retired(self):
-        self.note("home/n.md")
-        self.tool("index")
-        index = self.root / "home/index.md"
-        crlf = index.read_bytes().replace(b"\n", b"\r\n")
-        index.write_bytes(crlf)
-        self.tool("index", "--check")
-        self.config["indexes"]["roots"] = []
-        self.save_config()
-        self.assertIn("Retired index: home/index.md", self.tool("index", "--check", expected=1).stderr)
-        self.assertEqual(index.read_bytes(), crlf)
-
-    def test_unreadable_excluded_notes_do_not_block_index(self):
-        self.note("home/n.md")
-        note = self.write("home/guidelines/policy.md", "private")
-        note.chmod(0)
-        try:
-            if os.access(note, os.R_OK):
-                self.skipTest("process can read restricted files")
-            self.tool("index")
-        finally:
-            note.chmod(0o644)
-
-    def test_relative_paths_and_boolean_property_types(self):
-        self.config["indexes"].update(exclude_paths=["./work/"], include_properties={"count": 1},
-                                      exclude_properties={"flags": [True]})
-        self.save_config()
-        self.write("work/no-schema.md", "unstructured")
-        self.note("home/match.md", extra="count: 1.0\nflags: [1]\n")
-        self.note("home/skip.md", extra="count: true\n")
-        self.note("home/skip-nested.md", extra="count: 1\nflags: [true]\n")
-        self.tool("index")
-        index = (self.root / "home/index.md").read_text()
-        self.assertIn("match.md", index)
-        self.assertNotIn("skip", index)
-        self.assertFalse((self.root / "work/index.md").exists())
 
     def test_custom_post_commit_hook_preserved_before_installing_either_hook(self):
         post = self.write(".git/hooks/post-commit", "#!/bin/sh\n# custom post hook\n")
@@ -395,55 +207,51 @@ class VaultTests(unittest.TestCase):
         self.tool("install-hook", expected=2)
         self.assertIn("existing custom hook", hook.read_text())
 
-    def test_staged_config_wins_over_unstaged_config_edits(self):
+    def test_draft_config_is_ignored_on_commit_and_sync(self):
+        legacy = '{"indexes": {"roots": ["*"]}, "timestamps": {"enabled": true}}'
+        config = self.write("vault.config.json", legacy)
         self.note("home/note.md")
-        self.git("add", ".")
-        self.config["indexes"]["exclude_paths"] = ["home"]
-        self.save_config()
         self.tool("install-hook")
-        self.git("commit", "-qm", "staged config")
-        self.assertIn("note.md", self.git("show", "HEAD:home/index.md").stdout)
-        self.assertIn('"home"', (self.root / "vault.config.json").read_text())
+        self.commit()
+        result = json.loads(self.tool("sync").stdout)
+        self.assertEqual((result["added"], result["coverage"]), (0, []))
+        with sqlite3.connect(result["database"]) as db:
+            self.assertEqual(db.execute("SELECT path FROM notes").fetchall(), [("home/note.md",)])
+        self.assertEqual(config.read_text(), legacy)
 
-    def test_timestamp_opt_in_and_disabled_setting(self):
-        for enabled in (True, False):
-            with self.subTest(enabled=enabled):
-                self.config["timestamps"]["enabled"] = enabled
-                self.save_config()
-                note = self.note("home/note.md")
-                if enabled:
-                    note.write_text(note.read_text().replace("date_updated: 2001-01-01\n", ""))
-                self.git("add", ".")
-                self.tool("pre-commit")
-                staged = self.git("show", ":home/note.md").stdout
-                self.assertIn("date_created: 2000-01-01", staged)
-                if enabled:
-                    self.assertNotIn("date_updated", staged)
-                else:
-                    self.assertIn("date_updated: 2001-01-01", staged)
+    def test_timestamp_hook_leaves_undated_notes_alone(self):
+        note = self.note("home/note.md")
+        note.write_text(note.read_text().replace("date_updated: 2001-01-01\n", ""))
+        self.git("add", ".")
+        self.tool("pre-commit")
+        self.assertEqual(self.git("show", ":home/note.md").stdout, note.read_text())
+        self.assertNotIn("date_updated", note.read_text())
 
-    def test_bad_date_and_symlinked_output_fail_without_overwriting(self):
-        self.note("home/note.md", extra="invalid_date: 2026-99-99\n")
-        self.assertNotIn("Traceback", self.tool("index", expected=2).stderr)
-        self.note("home/note.md")
+    def test_timestamp_hook_refuses_symlinked_working_notes(self):
+        note = self.note("home/note.md")
+        self.git("add", ".")
         authored = self.write("authored.md", "Keep this content\n")
-        (self.root / "home/index.md").symlink_to(authored)
-        self.tool("index", expected=2)
+        note.unlink()
+        note.symlink_to(authored)
+        result = self.tool("pre-commit", expected=2)
+        self.assertIn("symlinked", result.stderr)
         self.assertEqual(authored.read_text(), "Keep this content\n")
+        self.assertIn("date_updated: 2001-01-01", self.git("show", ":home/note.md").stdout)
 
     def test_manually_assembled_vault_links_and_tooling(self):
         for obsidian in (False, True):
             target = Path(self.temp.name) / ("with-editor" if obsidian else "plain")
             (target / "vault-tools").mkdir(parents=True)
             shutil.copytree(SOURCE / "starter/inbox", target / "inbox")
-            for name in ("AGENTS.md", "README.md", "vault.config.json"):
+            for name in ("AGENTS.md", "README.md"):
                 shutil.copy2(SOURCE / "starter" / name, target / name)
             shutil.copytree(SOURCE / "starter/templates", target / "templates")
             shutil.copytree(SOURCE / "starter/guidelines", target / "guidelines")
             shutil.copytree(SOURCE / "framework", target / "vault-framework")
             self.assertEqual((target / "vault-framework/VERSION").read_bytes(), (SOURCE / "framework/VERSION").read_bytes())
-            for name in ("vault.py", "requirements.txt", "README.md"):
-                shutil.copy2(SOURCE / "tools" / name, target / "vault-tools" / name)
+            shutil.copytree(SOURCE / "tools", target / "vault-tools", dirs_exist_ok=True,
+                            ignore=shutil.ignore_patterns("__pycache__"))
+            shutil.copytree(SOURCE / "skills/discover-vault", target / "vault-tools/skills/discover-vault")
             for name in (".gitignore", ".gitattributes"):
                 shutil.copy2(SOURCE / name, target / name)
             if obsidian:
@@ -457,11 +265,45 @@ class VaultTests(unittest.TestCase):
             (target / "home").mkdir()
             (target / "home/note.md").write_text("---\ntags: [resource]\ndescription: Manual setup example\n---\n# Example\n")
             command = [sys.executable, str(target / "vault-tools/vault.py"), "--vault", str(target)]
-            self.run_process([*command, "index"])
+            result = json.loads(self.run_process([*command, "sync"]).stdout)
             self.run_process([*command, "install-hook"])
-            self.assertIn("Manual setup example", (target / "home/index.md").read_text())
+            with sqlite3.connect(result["database"]) as db:
+                found = db.execute("SELECT description FROM notes WHERE path = 'home/note.md'").fetchone()
+            self.assertEqual(found, ("Manual setup example",))
+            self.assertFalse((target / "home/index.md").exists())
             self.assertTrue((target / ".git/hooks/pre-commit").is_file())
             self.assertEqual((target / ".obsidian").exists(), obsidian)
+
+    def test_catalog_hook_reads_working_tree_and_preserves_staged_timestamps(self):
+        self.tool("install-hook")
+        self.note("home/note.md", body="committedtext")
+        self.write("home/index.md", "# Authored navigation\n")
+        self.git("add", ".")
+        self.note("home/note.md", body="workingtext")
+        self.write("inbox/new.md", "# Untracked capture\n")
+        self.git("commit", "-qm", "Catalog from the working tree")
+        committed = self.git("show", "HEAD:home/note.md").stdout
+        self.assertIn("committedtext", committed)
+        self.assertNotIn("workingtext", committed)
+        self.assertIn(f"date_updated: {dt.datetime.now(dt.timezone.utc).date()}", committed)
+        result = json.loads(self.tool("sync").stdout)
+        self.assertEqual((result["added"], result["updated"], result["removed"]), (0, 0, 0))
+        with sqlite3.connect(result["database"]) as db:
+            self.assertEqual(db.execute("SELECT path FROM note_text WHERE note_text MATCH 'workingtext'").fetchall(),
+                             [("home/note.md",)])
+            self.assertEqual(db.execute("SELECT path FROM notes ORDER BY path").fetchall(),
+                             [("home/index.md",), ("home/note.md",), ("inbox/new.md",)])
+        self.assertEqual((self.root / "home/index.md").read_text(), "# Authored navigation\n")
+
+    def test_catalog_hook_failure_does_not_reject_commit(self):
+        self.tool("install-hook")
+        self.note("home/note.md")
+        self.git("add", ".")
+        self.write("vault-framework/CATALOG_SCHEMA_VERSION", "invalid")
+        result = self.git("commit", "-qm", "Commit with unavailable catalog")
+        self.assertIn("Catalog sync failed", result.stderr)
+        self.assertIn("No previous snapshot", result.stderr)
+        self.assertIn("Commit with unavailable catalog", self.git("log", "-1", "--format=%s").stdout)
 
 
 if __name__ == "__main__":

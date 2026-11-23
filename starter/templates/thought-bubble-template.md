@@ -5,4 +5,4 @@ tags:
 
 # {{title}}
 
-Write the idea here. Process it during inbox review.
+Write down the thought or question in your own words. Add to it when it comes up again.

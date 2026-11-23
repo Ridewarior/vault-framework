@@ -1,28 +1,28 @@
 # Vault framework
 
-A framework for my knowledge vaults and the agents that use them.
+Vault framework helps you and your agents keep a shared collection of Markdown notes. Use a vault to record why you made a decision, find the evidence behind it, or pick up work where you left off. The installer creates the folder structure, note templates, and guidelines. You choose how to organize, store, and sync your notes.
 
-The framework covers shared structure, note metadata, and maintenance principles. Each vault defines its own subjects, tags, workflows, and agent instructions. Vaults choose their storage and sync method. This repository uses Git.
+## Get started
 
-I use Obsidian, so the starter includes optional settings for it. The Markdown files and core rules work without Obsidian.
+On Linux with an x86-64 processor, download the published prerelease and start the setup wizard with one command:
 
-## In this draft
+```sh
+curl -fL https://github.com/Ridewarior/vault-framework/releases/download/v0.1.0-draft/vault-linux-amd64 -o vault && chmod +x vault && ./vault
+```
 
-| Location | Contents |
+Choose **Create a vault** and give it a new or empty folder. The wizard offers Obsidian settings, Git, and search tools as optional additions.
+
+For macOS, Windows, or ARM64 Linux, download the executable for your platform from the [release page](https://github.com/Ridewarior/vault-framework/releases). To try the version in this checkout with Go 1.23 or newer, run `go run ./installer`. The [setup guide](docs/setup.md) covers command-line options and updates.
+
+## Inside a vault
+
+The installer puts the shared rules in `vault-framework/`. Use `guidelines/` for your vault's tags and workflows, and `AGENTS.md` to tell agents how to work with your notes. Updating the framework replaces the shared files and preserves your local rules.
+
+| Guide | What you'll find |
 | --- | --- |
-| [Framework](framework/README.md) | Shared principles and conventions |
-| [Starter](starter/README.md) | A reserved inbox, editable local guidelines, general templates, and sample agent instructions |
-| [Examples](examples/README.md) | Personal notes and an optional work-vault setup |
-| [Setup and updates](docs/setup.md) | Create or update a vault with the Go wizard |
-| [Tool guide](tools/README.md) | Optional indexes and Git hook |
-| [Review notes](docs/review-notes.md) | Recent decisions and open choices |
-
-The source folders `framework/` and `tools/` become `vault-framework/` and `vault-tools/` inside a vault. Keep framework copies unchanged during normal use. A vault's own rules live in `guidelines/` and its root `AGENTS.md`.
-
-## Use it
-
-Run the setup executable with no arguments for a guided walkthrough. It includes the starter files. From a source checkout with Go 1.23 or newer, run `go run .`.
-
-After the first published release, use the [download and launch commands](docs/setup.md) on a fresh device. The [setup skill](skills/setup-vault/SKILL.md) helps an agent create a vault and adapt its local guidelines. See the [release guide](docs/releases.md) to build and publish downloads.
-
-This is an early draft toward 0.1. Read [AGENTS.md](AGENTS.md) before agent work on the repository. The repo is public for convenient access; its choices follow my own needs.
+| [Framework](framework/README.md) | How to organize notes, link evidence, and record decisions |
+| [Starter](starter/README.md) | The guidelines, inbox, and templates for a new vault |
+| [Examples](examples/README.md) | A personal vault and a work vault with ticket notes |
+| [Maintenance tools](tools/README.md) | SQLite search and optional Git hooks |
+| [Agent skills](skills) | Setup instructions and queries for finding notes |
+| [Releases](docs/releases.md) | How versions are built and published |

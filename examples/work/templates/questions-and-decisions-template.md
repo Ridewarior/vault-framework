@@ -14,4 +14,4 @@ date_updated: "{{date}}"
 
 ## Decisions
 
-Record the choice, its reasons, and useful alternatives when a question is resolved.
+Record what was agreed for this ticket and why. Link any applicable standing decision.

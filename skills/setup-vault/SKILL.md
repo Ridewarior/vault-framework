@@ -4,9 +4,9 @@ description: Create a new vault with the vault-framework CLI and tailor its star
 disable-model-invocation: true
 ---
 
-Use the destination and intended use from the request. Ask about missing choices that affect setup, such as storage, Obsidian, or automatic indexes. A request for an index does not imply Git. Use the installed vault executable or build it from the framework checkout with Go. See `vault init --help` for flags.
+Use the destination and intended use from the request. Ask about missing choices that affect setup, such as storage, Obsidian, or local catalog discovery. Catalog discovery works with any local storage. Use the installed vault executable or build it from the framework checkout with Go. See `vault init --help` for flags.
 
-Run `vault init PATH` with the chosen flags. Use a new or empty directory. If requested, run `vault prepare PATH` to install maintenance dependencies and add `--hook` for a Git hook. If Python is missing, explain how to resume preparation in the vault already created.
+Run `vault init PATH` with the chosen flags. Use a new or empty directory. If requested, run `vault prepare PATH` to install or check PyYAML and SQLite. Add `--hook` if the owner requests Git hooks. If Python is missing, explain how to resume preparation in the vault already created.
 
 Personalize the installed README with the vault's purpose and known storage choices. Put organization, tags, and metadata rules in the installed `guidelines/`. Use the installed `AGENTS.md` for agent procedures and pointers to those rules. Keep the owner's wording where it conveys a preference. Leave unknown policies open. Add scoped guidelines or work templates only when the brief calls for them.
 

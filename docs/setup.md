@@ -4,7 +4,9 @@ Run the vault executable with no arguments for a guided walkthrough. It can crea
 
 ## Launch the wizard
 
-From a checkout with Go 1.23 or newer, run `go run .`. To keep the executable, run `go build -o vault .` on Linux or macOS, or `go build -o vault.exe .` on Windows.
+From the repository root with Go 1.23 or newer, run `go run ./installer`. To keep the executable, run `go build -o vault ./installer` on Linux or macOS, or `go build -o vault.exe ./installer` on Windows.
+
+The [installer folder](../installer/) holds the command, tests, and release scripts. Go embeds files relative to their package, so the [embed declaration](../embed.go) lives at the root alongside the files it bundles.
 
 Once a release is published as latest, run this on Linux or macOS with curl:
 
@@ -20,7 +22,7 @@ On Windows, run this in PowerShell:
 $arch = @{ X64 = 'amd64'; Arm64 = 'arm64' }[[Runtime.InteropServices.RuntimeInformation]::OSArchitecture.ToString()]; if (!$arch) { throw "Unsupported processor" }; Invoke-WebRequest "https://github.com/Ridewarior/vault-framework/releases/latest/download/vault-windows-$arch.exe" -OutFile vault.exe -ErrorAction Stop; .\vault.exe
 ```
 
-You can also download the executable directly from the release page. On Unix, give it execute permission with `chmod +x`. For a prerelease, use its tagged release page. See [publishing releases](releases.md).
+You can also download the executable directly from the release page. On Unix, give it execute permission with `chmod +x`. For a prerelease, use its tagged release page. The [release overview](releases.md) explains version tags and downloads.
 
 ## Use commands directly
 
@@ -34,8 +36,14 @@ vault update "/path/to/My Vault"
 
 `init` takes a new or empty directory. All three flags are optional. Git is needed for `--git`. Copying tools works even if Python is missing. The [work example](../examples/work/README.md) has additional rules and templates. You can also [copy the starter by hand](manual-setup.md).
 
-`prepare` uses Python 3.10 or newer with venv support. It creates or reuses the vault's local `.venv/` and installs PyYAML there. Run it on each device that uses the tools. If a previous run left an invalid `.venv/`, move it aside and rerun `prepare`. For a Git vault, `--hook` installs the vault commit hooks. Stage `vault.config.json` before the first commit. Exclude virtual environments from sync.
+`prepare` uses Python 3.10 or newer with venv support. It creates or reuses the vault's local `.venv/` and installs PyYAML there. Run it on each device that uses the tools. If a previous run left an invalid `.venv/`, move it aside and rerun `prepare`. Exclude virtual environments from sync.
+
+Preparation checks that Python can build and search an FTS5 table. It also checks that a compatible sqlite3 CLI can query that same table in read-only JSON mode. It records the verified executable path in the device's vault environment so sync can report it to agents. If needed, preparation installs the CLI using an available package manager. On macOS it uses Homebrew, on Windows it uses WinGet, and on Linux it supports apt, dnf, pacman, and zypper. Linux package installs may need elevated permissions. If no supported installer is available, install the [SQLite CLI](https://sqlite.org/download.html), make it available on `PATH`, and rerun preparation.
+
+Use `--hook` if you want the Git commit hooks. From the vault root, run `.venv/bin/python vault-tools/vault.py sync` when you first need the catalog. On Windows use `.venv\Scripts\python.exe`.
 
 `update` uses the framework bundled in the executable. Download a newer binary or rerun the launcher to update to a published version. To fetch a specific source revision, use `--ref TAG_OR_COMMIT` with init or update. Update replaces the shared folders, backs up their previous contents in `.vault-update-*/previous/`, and prints the backup path. Add `--tools` to install tools in an existing vault. After an interrupted update, check that both shared folders are complete, restore any missing copies from the backup, then remove a leftover `.vault-update-lock` once the updater has stopped.
+
+Vaults created with the draft release may still have a `vault.config.json`. The new tools ignore it. Before enabling the hooks on an upgraded vault, review the [catalog scope and timestamp behavior](../tools/README.md). The catalog skips old generated indexes. Update any local instructions that send readers to them.
 
 For agent-assisted setup, give the agent the [setup skill](../skills/setup-vault/SKILL.md), a destination, and a short description of what the vault is for. The skill uses the direct commands and adapts the installed README, guidelines, and agent instructions to your brief.

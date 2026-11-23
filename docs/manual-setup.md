@@ -10,7 +10,7 @@ Use a new, empty directory. From the downloaded repository, copy:
 
 | Source | Destination |
 | --- | --- |
-| `starter/AGENTS.md`, `starter/README.md`, `starter/vault.config.json` | Vault root |
+| `starter/AGENTS.md` and `starter/README.md` | Vault root |
 | `starter/inbox/` | `inbox/` |
 | `starter/guidelines/` | `guidelines/`, the vault's editable rules |
 | `starter/templates/` | `templates/` |
@@ -21,7 +21,7 @@ For example, from a Unix-like shell:
 ```sh
 vault_dir=/path/to/new-vault
 mkdir -p "$vault_dir"
-cp starter/AGENTS.md starter/README.md starter/vault.config.json "$vault_dir/"
+cp starter/AGENTS.md starter/README.md "$vault_dir/"
 cp -R starter/inbox "$vault_dir/inbox"
 cp -R starter/guidelines "$vault_dir/guidelines"
 cp -R starter/templates "$vault_dir/templates"
@@ -29,6 +29,8 @@ cp -R framework "$vault_dir/vault-framework"
 ```
 
 Edit the vault README, local guidelines, and agent instructions for its purpose. Keep `vault-framework/` unchanged. These commands assume an empty destination; review existing files before copying an update over them.
+
+If you want an agent working in another project to find this vault, put its location and purpose in that agent's user-level instructions. For example, "For the reasoning behind my personal engineering choices, search the vault at `~/Notes/Personal`. Start with its `AGENTS.md`."
 
 ## Optional additions
 
@@ -38,13 +40,15 @@ For Obsidian settings:
 cp -R starter/.obsidian "$vault_dir/.obsidian"
 ```
 
-For the Python index tool and its guide:
+For the optional Python tools, their guide, and the discovery skill:
 
 ```sh
 cp -R tools "$vault_dir/vault-tools"
+mkdir -p "$vault_dir/vault-tools/skills"
+cp -R skills/discover-vault "$vault_dir/vault-tools/skills/"
 ```
 
-Install Python and PyYAML as described in the tool guide. Index generation works without Git. Keep virtual environments out of the vault's sync or sharing rules where needed.
+Install Python, PyYAML, and a compatible sqlite3 CLI as described in the copied tool guide. Catalog sync works without Git. Keep the Python environment local to each device.
 
 For a vault using Git:
 

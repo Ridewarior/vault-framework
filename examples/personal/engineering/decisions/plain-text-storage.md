@@ -1,7 +1,8 @@
 ---
 tags:
   - decision
-description: The choice to keep notes in Markdown and the reasons for it.
+description: Why engineering notes use Markdown with simple YAML properties.
+decision_status: accepted
 date_created: 2026-11-15
 ---
 
@@ -9,15 +10,15 @@ date_created: 2026-11-15
 
 ## Context
 
-The example vault needs notes that several editors and agents can read.
+Engineering notes need to open in several editors. I also want an agent to be able to search the same files.
 
 ## Decision
 
-Use Markdown with simple YAML properties.
+On November 15, 2026, I chose Markdown with simple YAML properties for my engineering notes. This replaces my [earlier choice to use the editor's notebook](use-editor-notebook.md).
 
 ## Rationale and alternatives
 
-A database-backed app could provide richer controls but would require another export or access mechanism. Plain text fits the sample preference.
+The notebook made it easy to capture a note alongside code, but reading those notes from another editor required an export. I wanted to search the originals from either editor.
 
 ## Consequences
 

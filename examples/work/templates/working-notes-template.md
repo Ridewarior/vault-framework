@@ -14,4 +14,4 @@ Record observations and sources. Mark assumptions clearly.
 
 ## Working detail
 
-Add useful code paths, experiments, and follow-ups.
+Keep details the next session would otherwise have to rediscover. Cut false leads as you resolve them.
