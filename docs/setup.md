@@ -22,7 +22,7 @@ On Windows, run this in PowerShell:
 $arch = @{ X64 = 'amd64'; Arm64 = 'arm64' }[[Runtime.InteropServices.RuntimeInformation]::OSArchitecture.ToString()]; if (!$arch) { throw "Unsupported processor" }; Invoke-WebRequest "https://github.com/Ridewarior/vault-framework/releases/latest/download/vault-windows-$arch.exe" -OutFile vault.exe -ErrorAction Stop; .\vault.exe
 ```
 
-You can also download the executable directly from the release page. On Unix, give it execute permission with `chmod +x`. For a prerelease, use its tagged release page. See [publishing releases](releases.md).
+You can also download the executable directly from the release page. On Unix, give it execute permission with `chmod +x`. For a prerelease, use its tagged release page. The [release overview](releases.md) explains version tags and downloads.
 
 ## Use commands directly
 

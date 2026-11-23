@@ -18,7 +18,7 @@ The editable [guidelines](guidelines/README.md) define this vault's tags, proper
 
 File notes and recurring thoughts under their subject. Use `inbox/` when you want to sort a capture later. A subject's `decisions/` folder holds its standing decision records. Vault-wide records go in the root `decisions/`.
 
-Choose templates that fit the vault. The general starter includes references, research, meetings, and decisions. Work-item templates are an optional addition from the work example.
+Choose templates that fit the vault. The starter includes templates for research, thought bubbles, and standing decisions. Work-item templates are an optional addition from the work example.
 
 ## Optional tools
 

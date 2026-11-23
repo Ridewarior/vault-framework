@@ -1,8 +1,8 @@
 # Vault framework
 
-I use these vaults to pick up a question long after I have forgotten the conversation or the name of the note. People and agents keep enough context for a later reader to find what we learned, why we made a choice, and what we left open. Each vault defines its own subjects and ways of keeping notes.
+The framework defines how to organize a vault and what to record in a note. Keep the reasons for decisions, the evidence behind them, and questions that still need an answer. You choose the subjects, tags, and working practices for your vault.
 
-The current version is recorded in [VERSION](VERSION). The version file travels with each framework copy so the vault can identify what it uses.
+Each installed copy includes its [version number](VERSION).
 
 | Guide | Covers |
 | --- | --- |
@@ -27,7 +27,7 @@ What belongs in a vault depends on its purpose. Financial records may belong in 
 
 ## Agents and local guidance
 
-Search in the words someone might remember, such as a symptom, a rejected option, or a question. Follow links to the reasons and sources. When the notes show only what someone tried, say which choices are still open. An agent can follow a convention apparent in nearby work. The owner decides whether it becomes a standing rule or preference.
+Search in the words someone might remember, such as a symptom, a rejected option, or a question. Follow links to the reasons and sources. When the notes show only what someone tried, say which choices are still open. An agent can follow a convention apparent in nearby work. You decide whether it becomes a standing rule or preference.
 
 Each vault's `AGENTS.md` and guideline layers explain how to work there. Access to a note does not grant permission to publish it or change another system.
 

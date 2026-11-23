@@ -43,7 +43,7 @@ Respect the current permission when pruning, merging, or removing a note. Permis
 
 ## Status
 
-These values are useful starting points:
+A note without a `status` property is `active` by default. Use an explicit value when its state changes.
 
 | Value | Meaning |
 | --- | --- |
@@ -63,7 +63,7 @@ Tags do not have to mirror folders or name every subject mentioned in a note. Pu
 
 ## Templates and writing
 
-Each vault chooses its document types and templates. The general starter includes captures, references, research, meetings, and decisions. Work-item notes and execution plans are optional additions from the work example.
+Each vault chooses its document types and templates. The starter includes templates for research, thought bubbles, and standing decisions. Work-item notes and execution plans are optional additions from the work example.
 
 Replace template guidance with real content and remove unused sections. Obsidian's core Templates plugin can fill `{{title}}` and `{{date}}`; agents can fill the same templates directly.
 

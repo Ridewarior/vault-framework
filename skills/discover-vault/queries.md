@@ -14,7 +14,16 @@ Check the version with `PRAGMA user_version;`.
 | `note_text` | FTS5 table with `rowid` matching `notes.id`, and searchable `path`, `title`, `description`, and `body` |
 | `coverage` | Affected vault-relative `path`, `kind` (`metadata` or `scan`), and `detail` |
 
-Dates use `YYYY-MM-DD` when provided in that format. `metadata_json` holds parsed frontmatter including vault-local fields, or `{}` when there is no frontmatter. NULL indicates a metadata gap. Use `json_extract(metadata_json, '$.status')` for a field such as status. Check `coverage` for inaccessible paths before using cached rows. Join FTS by row ID to include other note fields.
+Dates use `YYYY-MM-DD` when provided in that format. `metadata_json` holds parsed frontmatter including vault-local fields, or `{}` when there is no frontmatter. NULL indicates a metadata gap. Check `coverage` for inaccessible paths before using cached rows. Join FTS by row ID to include other note fields.
+
+A note is active if its readable frontmatter omits `status` or sets it to `active`.
+
+```sql
+SELECT path FROM notes
+WHERE metadata_json IS NOT NULL
+  AND (json_type(metadata_json, '$.status') IS NULL
+       OR json_extract(metadata_json, '$.status') = 'active');
+```
 
 Use the indexed `properties` table to look up arbitrary field values and list members. For example, `SELECT DISTINCT path FROM properties WHERE name = 'related_tickets' AND value_json = json_quote('PLUS-318');` finds references even if the ticket lives outside the vault. List positions keep repeated values in order. For an empty list, an explicit null, or a missing field, use `json_type(metadata_json, '$.related_tickets')` on notes with readable metadata. Those cases return `array`, `null`, and SQL NULL respectively.
 
